@@ -1,0 +1,269 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================================================
+   BASE LAYER — Global Resets & Defaults
+   ================================================================ */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-dark-app text-gray-50 font-sans min-h-screen leading-relaxed;
+    @apply antialiased selection:bg-primary-500/30 selection:text-white;
+    overflow-x: hidden;
+  }
+
+  /* Headings use Outfit font by default */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+
+  h1 { @apply text-display; }
+  h2 { @apply text-headline; }
+  h3 { @apply text-title; }
+  h4 { @apply text-subtitle; }
+
+  /* Links */
+  a {
+    @apply text-inherit no-underline transition-colors duration-200;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-app;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/20;
+  }
+}
+
+/* ================================================================
+   COMPONENT LAYER — Reusable UI Patterns
+   ================================================================ */
+@layer components {
+
+  /* ── Layout Containers ───────────────────────────── */
+  .container-dashboard {
+    @apply w-full max-w-dashboard mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ── Glassmorphic Surfaces ───────────────────────── */
+  .glass-panel {
+    background: rgba(17, 24, 39, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    @apply border border-dark-border rounded-2xl shadow-glass
+           transition-all duration-300 ease-out-expo;
+  }
+
+  .glass-panel:hover {
+    @apply border-white/[0.15];
+  }
+
+  .glass-card {
+    @apply glass-panel p-6;
+  }
+
+  /* ── Ambient Background ──────────────────────────── */
+  .gradient-bg {
+    @apply absolute inset-0 -z-10 overflow-hidden pointer-events-none;
+    background:
+      radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 45%);
+  }
+
+  /* ── Buttons ─────────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2
+           px-6 py-3 font-heading font-medium text-sm
+           rounded-xl border border-transparent
+           cursor-pointer select-none
+           transition-all duration-200 ease-out-expo
+           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-app
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none;
+  }
+
+  .btn-sm {
+    @apply px-4 py-2 text-caption rounded-lg;
+  }
+
+  .btn-lg {
+    @apply px-8 py-4 text-body rounded-2xl;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white
+           shadow-lg shadow-primary-600/30
+           hover:bg-primary-500 hover:-translate-y-0.5 hover:shadow-primary-500/40
+           focus:ring-primary-500;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary-600 text-white
+           shadow-lg shadow-secondary-600/30
+           hover:bg-secondary-500 hover:-translate-y-0.5 hover:shadow-secondary-500/40
+           focus:ring-secondary-500;
+  }
+
+  .btn-outline {
+    @apply bg-transparent border-white/10 text-white
+           hover:bg-white/5 hover:border-white/20
+           focus:ring-white/20;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white
+           shadow-lg shadow-red-600/30
+           hover:bg-red-500 hover:-translate-y-0.5 hover:shadow-red-500/40
+           focus:ring-red-500;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-gray-400
+           hover:text-white hover:bg-white/5
+           focus:ring-white/10;
+  }
+
+  /* ── Form Controls ───────────────────────────────── */
+  .form-group {
+    @apply mb-5;
+  }
+
+  .form-label {
+    @apply block text-overline text-gray-400 mb-2 uppercase;
+  }
+
+  .form-input {
+    @apply w-full px-4 py-3
+           bg-black/20 border border-white/10 rounded-xl
+           text-white text-body placeholder-gray-500
+           transition-all duration-200
+           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30;
+  }
+
+  .form-select {
+    @apply form-input appearance-none cursor-pointer pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%239ca3af'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z'/%3E%3C/svg%3E");
+    background-size: 1.25rem;
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+  }
+
+  .form-textarea {
+    @apply form-input resize-none min-h-[100px];
+  }
+
+  .form-error {
+    @apply text-red-400 text-caption mt-1.5 flex items-center gap-1;
+  }
+
+  /* ── Stats / Metric Cards ────────────────────────── */
+  .stat-card {
+    @apply glass-panel p-5 flex items-center gap-4;
+  }
+
+  .stat-icon {
+    @apply p-3 rounded-xl;
+  }
+
+  .stat-label {
+    @apply text-caption text-gray-400;
+  }
+
+  .stat-value {
+    @apply text-headline text-white font-heading;
+  }
+
+  /* ── Badges & Status Chips ───────────────────────── */
+  .badge {
+    @apply inline-flex items-center px-3 py-1
+           rounded-full text-overline font-semibold uppercase;
+  }
+
+  .badge-primary  { @apply bg-primary-500/15 text-primary-400; }
+  .badge-success  { @apply bg-secondary-500/15 text-secondary-400; }
+  .badge-warning  { @apply bg-amber-500/15 text-amber-400; }
+  .badge-danger   { @apply bg-red-500/15 text-red-400; }
+  .badge-info     { @apply bg-blue-500/15 text-blue-400; }
+
+  /* ── Health Status Indicators ────────────────────── */
+  .health-dot {
+    @apply w-2.5 h-2.5 rounded-full inline-block;
+  }
+  .health-dot-critical { @apply health-dot bg-red-500 shadow-glow-danger; }
+  .health-dot-warning  { @apply health-dot bg-amber-500; }
+  .health-dot-stable   { @apply health-dot bg-secondary-500 shadow-glow-success; }
+
+  /* ── Page Section Headers ────────────────────────── */
+  .page-header {
+    @apply mb-8;
+  }
+
+  .page-title {
+    @apply text-headline text-white font-heading mb-1;
+  }
+
+  .page-subtitle {
+    @apply text-body text-gray-400;
+  }
+
+  /* ── Empty State ─────────────────────────────────── */
+  .empty-state {
+    @apply glass-panel py-16 px-8 text-center text-gray-400;
+  }
+
+  /* ── Responsive Grid Helpers ─────────────────────── */
+  .grid-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+  }
+
+  .grid-stats {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+
+  .grid-dashboard {
+    @apply grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-8 items-start;
+  }
+}
+
+/* ================================================================
+   UTILITY LAYER — One-Off Helpers
+   ================================================================ */
+@layer utilities {
+
+  /* Staggered animation delays for list items */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+
+  /* Gradient text utility */
+  .text-gradient {
+    @apply bg-clip-text text-transparent
+           bg-gradient-to-r from-primary-400 to-secondary-400;
+  }
+
+  /* Shimmer loading skeleton */
+  .skeleton {
+    @apply bg-gradient-to-r from-dark-surface via-dark-hover to-dark-surface
+           bg-[length:200%_100%] animate-shimmer rounded-lg;
+  }
+}
