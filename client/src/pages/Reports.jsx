@@ -12,6 +12,12 @@ import {
   Filter
 } from 'lucide-react';
 import reportService from '../services/reportService';
+import { showToast } from '../utils/toast';
+import { SkeletonLoader } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
+import Button from '../components/Button';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 
 // File Preview Modal Component
 const PreviewModal = ({ isOpen, onClose, report }) => {
@@ -20,31 +26,31 @@ const PreviewModal = ({ isOpen, onClose, report }) => {
   const isPDF = report.fileUrl.toLowerCase().endsWith('.pdf') || report.title.toLowerCase().endsWith('.pdf');
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div 
-        className="glass-panel w-full max-w-4xl max-h-[85vh] flex flex-col p-6 animate-scale-in"
+        className="bg-white border border-gray-200 shadow-xl rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col p-6 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-dark-border pb-4 mb-4">
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
           <div>
-            <h3 className="text-title text-white font-bold">{report.title}</h3>
-            <p className="text-caption text-gray-400 mt-0.5">Patient: {report.patientName} • Category: {report.category}</p>
+            <h3 className="text-subtitle font-bold text-gray-900">{report.title}</h3>
+            <p className="text-caption text-gray-500 mt-0.5">Patient: {report.patientName} • Category: {report.category}</p>
           </div>
           <button 
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Modal Content */}
-        <div className="flex-1 overflow-auto flex items-center justify-center bg-black/40 rounded-xl min-h-[300px]">
+        <div className="flex-1 overflow-auto flex items-center justify-center bg-gray-50 rounded-xl min-h-[300px] p-4 border border-gray-200">
           {isPDF ? (
-            <div className="text-center p-8 space-y-4">
-              <FileText size={64} className="text-primary-400 mx-auto animate-pulse" />
-              <p className="text-white font-medium">PDF Document Preview</p>
+            <div className="text-center p-8 space-y-3">
+              <FileText size={48} className="text-gray-900 mx-auto" />
+              <p className="text-gray-900 font-bold">PDF Document Preview</p>
               <p className="text-caption text-gray-500 max-w-sm mx-auto">
                 Direct browser PDF rendering is dependent on client compatibility. You can view or download the file directly:
               </p>
@@ -52,17 +58,17 @@ const PreviewModal = ({ isOpen, onClose, report }) => {
                 href={report.fileUrl} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="btn btn-primary btn-sm inline-flex items-center gap-1.5"
               >
-                <Eye size={14} />
-                Open PDF in New Tab
+                <Button variant="primary" size="sm" icon={Eye}>
+                  Open PDF in New Tab
+                </Button>
               </a>
             </div>
           ) : (
             <img 
               src={report.fileUrl} 
               alt={report.title} 
-              className="max-w-full max-h-[60vh] object-contain rounded-lg"
+              className="max-w-full max-h-[60vh] object-contain rounded-lg border border-gray-200 shadow-sm"
             />
           )}
         </div>
@@ -99,7 +105,6 @@ const Reports = () => {
 
   const fileInputRef = useRef(null);
 
-  // Mock data fallbacks for offline demo mode
   const mockReports = [
     {
       _id: 'mock1',
@@ -129,7 +134,7 @@ const Reports = () => {
       patientName: 'Leo Doe',
       category: 'Vaccine Certificate',
       doctor: 'State Clinic',
-      fileUrl: 'dummy.pdf', // Triggers PDF preview UI
+      fileUrl: 'dummy.pdf',
       cloudinaryId: 'm3',
       notes: 'Immunization complete.',
       date: new Date(Date.now() - 24 * 60 * 60 * 1000 * 20).toISOString()
@@ -157,7 +162,6 @@ const Reports = () => {
     fetchReports();
   }, []);
 
-  // Drag & Drop Handlers
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -203,7 +207,6 @@ const Reports = () => {
     setFile(selectedFile);
     setFormValidationError('');
     
-    // Auto-populate title if empty
     if (!title) {
       const baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
       setTitle(baseName);
@@ -231,7 +234,6 @@ const Reports = () => {
 
     try {
       if (offlineMode) {
-        // Local simulation for demonstration
         const localMockUrl = file.type.includes('pdf') 
           ? 'sample_document.pdf'
           : URL.createObjectURL(file);
@@ -248,14 +250,18 @@ const Reports = () => {
         };
 
         setReports([newReport, ...reports]);
+        showToast.success(`Report "${title}" uploaded successfully!`);
         resetForm();
       } else {
         const uploadedReport = await reportService.uploadReport(formData);
         setReports([uploadedReport, ...reports]);
+        showToast.success(`Report "${title}" uploaded successfully!`);
         resetForm();
       }
     } catch (err) {
-      setFormValidationError(err.message || 'File upload failed');
+      const errorMsg = err.message || 'File upload failed';
+      setFormValidationError(errorMsg);
+      showToast.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -286,8 +292,10 @@ const Reports = () => {
         await reportService.deleteReport(id);
         setReports(reports.filter(r => r._id !== id));
       }
+      showToast.success('Report deleted.');
     } catch (err) {
       console.error('Failed to delete report:', err);
+      showToast.error('Failed to delete report.');
     }
   };
 
@@ -296,7 +304,6 @@ const Reports = () => {
     setIsPreviewOpen(true);
   };
 
-  // Search & filter calculation
   const filteredReports = reports.filter(report => {
     const matchesSearch = 
       report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -312,27 +319,30 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 size={32} className="animate-spin text-primary-500 mb-4" />
-        <p className="text-gray-400 text-sm">Loading medical reports repository...</p>
+      <div className="animate-fade-in space-y-6">
+        <div className="page-header">
+          <div className="w-48 h-7 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="w-72 h-4 bg-gray-100 rounded animate-pulse" />
+        </div>
+        <SkeletonLoader type="card" count={3} />
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in space-y-6">
       {/* Page Header */}
       <div className="page-header">
-        <h2 className="page-title text-gradient bg-gradient-to-r from-primary-400 to-secondary-400">
+        <h2 className="page-title text-gray-900 font-bold">
           Medical Reports & Prescriptions
         </h2>
-        <p className="page-subtitle">Securely store, organize, and preview your family clinical records</p>
+        <p className="page-subtitle text-gray-500">Securely store, organize, and preview your family clinical records</p>
       </div>
 
       {/* Offline Alert */}
       {error && (
-        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-4 py-2.5 rounded-xl text-sm animate-scale-in">
-          <AlertCircle size={16} />
+        <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-700 px-3.5 py-2.5 rounded-lg text-caption font-medium">
+          <AlertCircle size={16} className="text-gray-900" />
           <span>{error}</span>
         </div>
       )}
@@ -341,18 +351,18 @@ const Reports = () => {
       <div className="grid-dashboard">
         
         {/* Left Side: Upload Form Panel */}
-        <div className="glass-card">
-          <h3 className="text-title text-white mb-5 flex items-center gap-2">
-            <Upload size={18} className="text-primary-400" />
+        <Card className="space-y-4">
+          <h3 className="text-subtitle font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <Upload size={18} className="text-gray-900" />
             Upload Document
           </h3>
 
-          <form onSubmit={handleUploadSubmit} className="space-y-4">
+          <form onSubmit={handleUploadSubmit} className="space-y-3.5">
             {/* Drag & Drop zone */}
             <div 
-              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center min-h-[140px]
-                ${dragActive ? 'border-primary-500 bg-primary-500/10' : 'border-white/10 hover:border-white/20 bg-black/10'}
-                ${file ? 'border-secondary-500 bg-secondary-500/5' : ''}`}
+              className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all duration-150 flex flex-col items-center justify-center min-h-[130px]
+                ${dragActive ? 'border-black bg-gray-100' : 'border-gray-300 hover:border-gray-400 bg-gray-50/70'}
+                ${file ? 'border-black bg-gray-100/50' : ''}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -368,13 +378,13 @@ const Reports = () => {
               />
 
               {file ? (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {file.type.includes('pdf') ? (
-                    <FileText size={36} className="text-secondary-400 mx-auto" />
+                    <FileText size={32} className="text-gray-900 mx-auto" />
                   ) : (
-                    <FileImage size={36} className="text-secondary-400 mx-auto" />
+                    <FileImage size={32} className="text-gray-900 mx-auto" />
                   )}
-                  <p className="text-white text-xs font-semibold truncate max-w-[200px]">
+                  <p className="text-gray-900 text-caption font-bold truncate max-w-[200px]">
                     {file.name}
                   </p>
                   <p className="text-[10px] text-gray-500">
@@ -382,18 +392,18 @@ const Reports = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2 text-gray-400">
-                  <Upload size={28} className="mx-auto text-gray-500" />
-                  <p className="text-xs font-semibold text-white">Drag & drop your file here</p>
+                <div className="space-y-1 text-gray-500">
+                  <Upload size={24} className="mx-auto text-gray-400" />
+                  <p className="text-caption font-bold text-gray-900">Drag & drop your file here</p>
                   <p className="text-[10px] text-gray-500">Supports PDF, PNG, JPG, JPEG (Max 5MB)</p>
                 </div>
               )}
             </div>
 
-            {/* Validation errors inside form */}
+            {/* Validation errors */}
             {formValidationError && (
-              <div className="flex items-center gap-1.5 text-red-400 text-[11px] bg-red-500/15 border border-red-500/10 p-2.5 rounded-lg">
-                <AlertCircle size={12} className="flex-shrink-0" />
+              <div className="flex items-center gap-1.5 text-red-700 text-caption bg-red-50 border border-red-200 p-2.5 rounded-lg">
+                <AlertCircle size={14} className="flex-shrink-0" />
                 <span>{formValidationError}</span>
               </div>
             )}
@@ -471,38 +481,41 @@ const Reports = () => {
             {/* Form Actions */}
             <div className="flex gap-2 pt-2">
               {file && (
-                <button 
-                  type="button" 
+                <Button 
+                  variant="secondary"
+                  size="sm"
                   onClick={resetForm} 
-                  className="btn btn-outline py-2 px-3 text-xs w-1/3"
+                  className="w-1/3"
                   disabled={submitting}
                 >
                   Clear
-                </button>
+                </Button>
               )}
-              <button 
+              <Button 
                 type="submit" 
-                className={`btn btn-primary py-2 px-4 text-xs flex items-center justify-center gap-1.5 ${file ? 'w-2/3' : 'w-full'}`}
+                variant="primary"
+                size="sm"
+                loading={submitting}
                 disabled={submitting || !file}
+                className={file ? 'w-2/3' : 'w-full'}
               >
-                {submitting && <Loader2 size={12} className="animate-spin" />}
-                <span>{submitting ? 'Uploading...' : 'Upload File'}</span>
-              </button>
+                Upload File
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
 
         {/* Right Side: Reports Grid & Filters */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           
           {/* Filters Row */}
-          <div className="glass-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <Card className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3" hoverable={false}>
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
               <input 
                 type="text" 
-                className="form-input pl-10 py-2 text-xs" 
+                className="form-input pl-9 py-2 text-caption" 
                 placeholder="Search reports by title, doctor, patient..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -510,87 +523,80 @@ const Reports = () => {
             </div>
 
             {/* Category Filter */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <Filter size={14} className="text-gray-500" />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Filter size={14} className="text-gray-400" />
               {categories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all duration-200
+                  className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all
                     ${selectedCategory === cat 
-                      ? 'bg-primary-500 text-white' 
-                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                      ? 'bg-black text-white' 
+                      : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'}`}
                 >
                   {cat === 'All' ? 'All categories' : cat}
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Grid display */}
           {filteredReports.length === 0 ? (
-            <div className="empty-state py-20">
-              <FileText size={48} className="mx-auto mb-4 text-gray-600 animate-pulse" />
-              <h3 className="text-title text-gray-300 mb-2">No documents match search filters</h3>
-              <p className="text-body text-gray-500 max-w-sm mx-auto">
-                Try adjusting your search terms or upload a new prescription or laboratory report.
-              </p>
-            </div>
+            <EmptyState
+              icon={FileText}
+              title="No documents match search filters"
+              description="Try adjusting your search terms or upload a new prescription or laboratory report."
+            />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredReports.map(report => (
-                <div key={report._id} className="glass-card flex flex-col justify-between group animate-fade-in">
-                  <div className="space-y-4">
+                <Card key={report._id} className="flex flex-col justify-between group animate-fade-in">
+                  <div className="space-y-3">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1 flex-1">
-                        <span className={`badge text-[9px] py-0.5
-                          ${report.category === 'Prescription' ? 'badge-primary' : ''}
-                          ${report.category === 'Lab Test' ? 'badge-info' : ''}
-                          ${report.category === 'Vaccine Certificate' ? 'badge-success' : ''}
-                          ${report.category === 'Other' ? 'badge-warning' : ''}
-                        `}>
+                        <Badge variant="secondary" className="text-[9px] py-0.5">
                           {report.category}
-                        </span>
-                        <h4 className="text-body font-bold text-white leading-snug line-clamp-2">
+                        </Badge>
+                        <h4 className="text-body font-bold text-gray-900 leading-snug line-clamp-2">
                           {report.title}
                         </h4>
                       </div>
 
-                      {/* Hover Actions */}
-                      <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
+                      {/* Actions */}
+                      <div className="flex gap-1 flex-shrink-0">
                         <button 
                           onClick={() => handleOpenPreview(report)}
-                          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+                          className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
                           title="Preview Document"
                         >
-                          <Eye size={12} />
+                          <Eye size={14} />
                         </button>
                         <button 
                           onClick={() => handleDeleteReport(report._id)}
-                          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-red-500/10 flex items-center justify-center text-gray-400 hover:text-red-400 transition-all duration-200"
+                          className="w-7 h-7 rounded-md hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
                           title="Delete Document"
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
 
                     {/* Metadata details */}
-                    <div className="space-y-1.5 pt-3.5 border-t border-dark-border text-caption text-gray-400">
+                    <div className="space-y-1 pt-3 border-t border-gray-200 text-caption text-gray-600">
                       <div className="flex justify-between">
                         <span className="text-gray-500">Patient:</span>
-                        <span className="text-white font-medium">{report.patientName}</span>
+                        <span className="text-gray-900 font-semibold">{report.patientName}</span>
                       </div>
                       {report.doctor && (
                         <div className="flex justify-between">
                           <span className="text-gray-500">Physician:</span>
-                          <span className="text-white font-medium">Dr. {report.doctor}</span>
+                          <span className="text-gray-900 font-semibold">Dr. {report.doctor}</span>
                         </div>
                       )}
                       <div className="flex justify-between">
                         <span className="text-gray-500">Date:</span>
-                        <span className="text-white font-medium">
+                        <span className="text-gray-900 font-semibold">
                           {new Date(report.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
                       </div>
@@ -598,12 +604,12 @@ const Reports = () => {
 
                     {/* Notes */}
                     {report.notes && (
-                      <p className="text-caption text-gray-500 italic bg-black/25 p-2.5 rounded-lg leading-snug">
+                      <p className="text-caption text-gray-600 italic bg-gray-50 p-2.5 rounded-lg border border-gray-100 leading-snug">
                         "{report.notes}"
                       </p>
                     )}
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           )}

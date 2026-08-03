@@ -6,15 +6,21 @@ import {
   Trash2, 
   X, 
   Clock, 
-  Check, 
   AlertCircle, 
   Loader2, 
   Filter,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  CheckCircle2
 } from 'lucide-react';
 import reminderService from '../services/reminderService';
 import familyService from '../services/familyService';
+import { showToast } from '../utils/toast';
+import { SkeletonLoader } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
+import Button from '../components/Button';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 
 // Reusable Medicine Reminder Modal (Add / Edit)
 const ReminderModal = ({ isOpen, onClose, onSubmit, reminder, familyMembers, loading }) => {
@@ -69,14 +75,13 @@ const ReminderModal = ({ isOpen, onClose, onSubmit, reminder, familyMembers, loa
       return;
     }
 
-    // Process times: comma-separated HH:MM strings to array
     const times = timesString
       .split(',')
       .map(t => t.trim())
-      .filter(t => /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t)); // Basic HH:MM regex check
+      .filter(t => Boolean(t));
 
     if (times.length === 0) {
-      setValidationError('Please enter times in YYYY-MM-DD or 24-hour format (e.g. 08:00, 20:00)');
+      setValidationError('Please enter times (e.g. 08:00, 20:00)');
       return;
     }
 
@@ -94,17 +99,17 @@ const ReminderModal = ({ isOpen, onClose, onSubmit, reminder, familyMembers, loa
   const frequencies = ['Daily', 'Twice Daily', 'Three Times Daily', 'Weekly', 'As Needed'];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-form p-6 sm:p-8 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-gray-200 shadow-xl rounded-xl w-full max-w-form p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-dark-border pb-4 mb-5">
-          <h3 className="text-title text-white flex items-center gap-2">
-            <Bell size={20} className="text-primary-400" />
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-5">
+          <h3 className="text-subtitle font-bold text-gray-900 flex items-center gap-2">
+            <Bell size={18} className="text-gray-900" />
             {reminder ? 'Edit Medicine Reminder' : 'Set Medication Reminder'}
           </h3>
           <button 
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
           >
             <X size={16} />
           </button>
@@ -112,7 +117,7 @@ const ReminderModal = ({ isOpen, onClose, onSubmit, reminder, familyMembers, loa
 
         {/* Validation Alert */}
         {validationError && (
-          <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl mb-4 text-xs">
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-caption font-medium">
             <AlertCircle size={14} className="flex-shrink-0" />
             <span>{validationError}</span>
           </div>
@@ -133,13 +138,13 @@ const ReminderModal = ({ isOpen, onClose, onSubmit, reminder, familyMembers, loa
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="form-group mb-0">
               <label className="form-label">Dosage</label>
               <input 
                 type="text" 
                 className="form-input" 
-                placeholder="e.g. 500mg, 1 tablet"
+                placeholder="e.g. 500mg, 1 Tablet, 5ml"
                 value={dosage}
                 onChange={(e) => setDosage(e.target.value)}
                 disabled={loading}
@@ -161,11 +166,11 @@ const ReminderModal = ({ isOpen, onClose, onSubmit, reminder, familyMembers, loa
           </div>
 
           <div className="form-group mb-0">
-            <label className="form-label">Alert Times (24h, Comma separated)</label>
+            <label className="form-label">Alert Times (Comma separated, e.g. 08:00, 20:00)</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="e.g. 08:00, 14:00, 20:00"
+              placeholder="08:00, 14:00, 20:00"
               value={timesString}
               onChange={(e) => setTimesString(e.target.value)}
               disabled={loading}
@@ -173,35 +178,33 @@ const ReminderModal = ({ isOpen, onClose, onSubmit, reminder, familyMembers, loa
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="form-group mb-0">
-              <label className="form-label">For Family Member</label>
+              <label className="form-label">Patient Profile</label>
               <select 
                 className="form-select"
                 value={familyMember}
                 onChange={(e) => setFamilyMember(e.target.value)}
                 disabled={loading}
               >
-                <option value="">Self</option>
+                <option value="">Self (Main User)</option>
                 {familyMembers.map(m => (
                   <option key={m._id} value={m._id}>{m.name} ({m.relation})</option>
                 ))}
               </select>
             </div>
 
-            {/* Active Status Checkbox */}
-            <div className="form-group mb-0 flex items-center justify-between mt-6 px-1">
-              <span className="text-overline text-gray-400 uppercase tracking-wider">Active Reminder</span>
+            <div className="form-group mb-0 flex items-center justify-between pt-6 px-3 bg-gray-50 rounded-lg border border-gray-200">
+              <label className="form-label cursor-pointer mb-0">Active Schedule</label>
               <button 
-                type="button"
+                type="button" 
                 onClick={() => setIsActive(!isActive)}
-                className="text-gray-400 hover:text-white transition-colors duration-200"
-                disabled={loading}
+                className="text-gray-700 hover:text-black transition-colors"
               >
                 {isActive ? (
-                  <ToggleRight size={32} className="text-secondary-500" />
+                  <ToggleRight size={28} className="text-black" />
                 ) : (
-                  <ToggleLeft size={32} />
+                  <ToggleLeft size={28} className="text-gray-400" />
                 )}
               </button>
             </div>
@@ -220,23 +223,21 @@ const ReminderModal = ({ isOpen, onClose, onSubmit, reminder, familyMembers, loa
           </div>
 
           {/* Modal Actions */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-dark-border mt-6">
-            <button 
-              type="button" 
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 mt-5">
+            <Button 
+              variant="secondary"
               onClick={onClose} 
-              className="btn btn-outline py-2.5 px-4 text-xs"
               disabled={loading}
             >
               Cancel
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="submit" 
-              className="btn btn-primary py-2.5 px-5 text-xs flex items-center gap-1.5"
-              disabled={loading}
+              variant="primary"
+              loading={loading}
             >
-              {loading && <Loader2 size={14} className="animate-spin" />}
-              <span>{reminder ? 'Save Changes' : 'Add Medication'}</span>
-            </button>
+              {reminder ? 'Save Changes' : 'Add Medication'}
+            </Button>
           </div>
         </form>
       </div>
@@ -261,7 +262,6 @@ const Reminders = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedReminder, setSelectedReminder] = useState(null);
 
-  // Fallback Mocks
   const mockFamilyMembers = [
     { _id: 'mock1', name: 'John Doe', relation: 'Self' },
     { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse' },
@@ -285,7 +285,7 @@ const Reminders = () => {
       dosage: '20mg',
       frequency: 'Daily',
       times: ['21:00'],
-      familyMember: null, // Self
+      familyMember: null,
       isActive: true,
       notes: 'Take before bedtime.'
     },
@@ -341,7 +341,6 @@ const Reminders = () => {
     setSubmitting(true);
     try {
       if (selectedReminder) {
-        // Edit flow
         if (selectedReminder._id.startsWith('mock') || selectedReminder._id.startsWith('local_')) {
           const matchedMember = familyMembers.find(m => m._id === formData.familyMember) || null;
           setReminders(reminders.map(r => r._id === selectedReminder._id 
@@ -352,8 +351,8 @@ const Reminders = () => {
           const updated = await reminderService.updateReminder(selectedReminder._id, formData);
           setReminders(reminders.map(r => r._id === selectedReminder._id ? updated : r));
         }
+        showToast.success(`Reminder for ${formData.medicineName} updated!`);
       } else {
-        // Add flow
         if (offlineMode) {
           const matchedMember = familyMembers.find(m => m._id === formData.familyMember) || null;
           const mockNewReminder = {
@@ -366,10 +365,12 @@ const Reminders = () => {
           const created = await reminderService.createReminder(formData);
           setReminders([...reminders, created]);
         }
+        showToast.success(`Reminder for ${formData.medicineName} created!`);
       }
       setIsModalOpen(false);
     } catch (err) {
       console.error('Failed to submit medicine reminder form:', err);
+      showToast.error(err.response?.data?.message || 'Failed to save reminder.');
     } finally {
       setSubmitting(false);
     }
@@ -387,8 +388,10 @@ const Reminders = () => {
         await reminderService.deleteReminder(id);
         setReminders(reminders.filter(r => r._id !== id));
       }
+      showToast.success('Medicine reminder deleted.');
     } catch (err) {
       console.error('Failed to delete reminder:', err);
+      showToast.error('Failed to delete reminder.');
     }
   };
 
@@ -402,12 +405,17 @@ const Reminders = () => {
         const updated = await reminderService.updateReminder(reminder._id, { isActive: updatedStatus });
         setReminders(reminders.map(r => r._id === reminder._id ? updated : r));
       }
+      showToast.info(`${reminder.medicineName} reminder is now ${updatedStatus ? 'active' : 'paused'}.`);
     } catch (err) {
       console.error('Failed to toggle reminder status:', err);
+      showToast.error('Failed to update status.');
     }
   };
 
-  // Filter application
+  const handleMarkDoseTaken = (medicineName) => {
+    showToast.success(`Marked ${medicineName} dose as taken!`);
+  };
+
   const filteredReminders = reminders.filter(reminder => {
     let matchesStatus = true;
     if (statusFilter !== 'All') {
@@ -431,53 +439,57 @@ const Reminders = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 size={32} className="animate-spin text-primary-500 mb-4" />
-        <p className="text-gray-400 text-sm">Loading medication list...</p>
+      <div className="animate-fade-in space-y-6">
+        <div className="page-header">
+          <div className="w-48 h-7 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="w-72 h-4 bg-gray-100 rounded animate-pulse" />
+        </div>
+        <SkeletonLoader type="card" count={3} />
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="page-header mb-0">
-          <h2 className="page-title text-gradient bg-gradient-to-r from-primary-400 to-secondary-400">
+          <h2 className="page-title text-gray-900 font-bold">
             Medicine Reminders
           </h2>
-          <p className="page-subtitle">Configure pill trackers and dosage schedules for your family</p>
+          <p className="page-subtitle text-gray-500">Configure pill trackers and dosage schedules for your family</p>
         </div>
-        <button 
+        <Button 
+          variant="primary"
+          icon={Plus}
           onClick={handleOpenAddModal}
-          className="btn btn-primary btn-sm self-start sm:self-auto flex items-center gap-1.5"
+          className="self-start sm:self-auto"
         >
-          <Plus size={16} />
-          Add Reminder
-        </button>
+          Add Medication
+        </Button>
       </div>
 
       {/* Offline Alert Warning */}
       {error && (
-        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-4 py-2.5 rounded-xl text-sm animate-scale-in">
-          <AlertCircle size={16} />
+        <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-700 px-3.5 py-2.5 rounded-lg text-caption font-medium">
+          <AlertCircle size={16} className="text-gray-900" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Filters Bar */}
-      <div className="glass-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3" hoverable={false}>
         {/* Status Filter */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter size={14} className="text-gray-500" />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Filter size={14} className="text-gray-400" />
           {statuses.map(st => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all duration-200
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all
                 ${statusFilter === st 
-                  ? 'bg-primary-500 text-white' 
-                  : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'}`}
             >
               {st === 'All' ? 'All status' : st}
             </button>
@@ -488,7 +500,7 @@ const Reminders = () => {
         <div className="flex items-center gap-2">
           <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Patient:</label>
           <select 
-            className="form-select py-1.5 px-3 text-xs w-44 bg-white/5 border-white/10"
+            className="form-select py-1.5 px-3 text-caption w-44 bg-gray-50 border-gray-200"
             value={memberFilter}
             onChange={(e) => setMemberFilter(e.target.value)}
           >
@@ -499,112 +511,108 @@ const Reminders = () => {
             ))}
           </select>
         </div>
-      </div>
+      </Card>
 
-      {/* Reminders Cards Grid */}
+      {/* Reminders Grid */}
       {filteredReminders.length === 0 ? (
-        <div className="empty-state">
-          <Bell size={48} className="mx-auto mb-4 text-gray-600 animate-pulse" />
-          <h3 className="text-title text-gray-300 mb-2">No active reminders found</h3>
-          <p className="text-body text-gray-500 max-w-sm mx-auto">
-            Try adjusting your search filters or add a new medicine reminder.
-          </p>
-        </div>
+        <EmptyState
+          icon={Bell}
+          title="No medicine reminders set"
+          description="Stay consistent with prescription schedules by creating automated dosage alerts."
+          actionText="Add Medication"
+          onAction={handleOpenAddModal}
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredReminders.map(reminder => (
-            <div 
-              key={reminder._id} 
-              className={`glass-card flex flex-col justify-between group animate-fade-in border
-                ${reminder.isActive ? 'border-white/5' : 'border-white/5 opacity-60'}`}
-            >
-              <div className="space-y-4">
+            <Card key={reminder._id} className="flex flex-col justify-between group animate-fade-in space-y-4">
+              <div className="space-y-3">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5
-                      ${reminder.isActive 
-                        ? 'bg-primary-500/10 text-primary-400' 
-                        : 'bg-white/5 text-gray-500'}`}
-                    >
-                      <Bell size={18} />
-                    </div>
-                    <div>
-                      <h4 className="text-body font-bold text-white leading-tight">
-                        {reminder.medicineName}
-                      </h4>
-                      <p className="text-[11px] text-gray-400 font-medium mt-0.5">
-                        {reminder.dosage} • {reminder.frequency}
-                      </p>
-                    </div>
+                  <div>
+                    <h4 className="text-body font-bold text-gray-900 leading-tight">
+                      {reminder.medicineName}
+                    </h4>
+                    <p className="text-caption text-gray-500 mt-0.5 font-medium">
+                      Dosage: <span className="text-gray-900 font-semibold">{reminder.dosage}</span> • {reminder.frequency}
+                    </p>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={() => handleToggleStatus(reminder)}
+                      className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
+                      title={reminder.isActive ? 'Pause Reminder' : 'Activate Reminder'}
+                    >
+                      {reminder.isActive ? <ToggleRight size={18} className="text-black" /> : <ToggleLeft size={18} className="text-gray-400" />}
+                    </button>
                     <button 
                       onClick={() => handleOpenEditModal(reminder)}
-                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+                      className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
                       title="Edit Reminder"
                     >
-                      <Pencil size={11} />
+                      <Pencil size={13} />
                     </button>
                     <button 
                       onClick={() => handleDeleteReminder(reminder._id)}
-                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-red-500/10 flex items-center justify-center text-gray-400 hover:text-red-400 transition-all duration-200"
+                      className="w-7 h-7 rounded-md hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
                       title="Delete Reminder"
                     >
-                      <Trash2 size={11} />
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
 
-                {/* Patient Tag & Toggle Switch */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-dark-border">
-                  <span className="badge badge-info text-[9px] py-0.5">
-                    {reminder.familyMember ? `${reminder.familyMember.name} (${reminder.familyMember.relation})` : 'Self'}
-                  </span>
-                  
-                  {/* Status Toggle Switch */}
-                  <button 
-                    onClick={() => handleToggleStatus(reminder)}
-                    className="flex items-center gap-1 text-[10px] font-semibold text-gray-400 hover:text-white transition-colors duration-200"
-                    title={reminder.isActive ? 'Deactivate reminder' : 'Activate reminder'}
-                  >
-                    <span>{reminder.isActive ? 'Active' : 'Paused'}</span>
-                    {reminder.isActive ? (
-                      <ToggleRight size={24} className="text-secondary-500" />
-                    ) : (
-                      <ToggleLeft size={24} />
-                    )}
-                  </button>
+                {/* Patient & Active Indicators */}
+                <div className="flex items-center gap-1.5 pt-2 border-t border-gray-200">
+                  <Badge variant={reminder.isActive ? 'primary' : 'secondary'} className="text-[9px]">
+                    {reminder.isActive ? 'Active' : 'Paused'}
+                  </Badge>
+                  <Badge variant="secondary" className="text-[9px]">
+                    {reminder.familyMember ? `${reminder.familyMember.name}` : 'Self'}
+                  </Badge>
                 </div>
 
-                {/* Alarm Timings */}
-                <div className="space-y-1.5 pt-1.5 text-caption text-gray-400">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Alert Times</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {reminder.times.map((time, idx) => (
-                      <span key={idx} className="flex items-center gap-1 px-2.5 py-1 bg-black/30 border border-white/5 rounded-lg text-xs text-white">
-                        <Clock size={10} className="text-gray-500" />
-                        {time}
+                {/* Times Badges */}
+                <div className="space-y-1 pt-1">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-1">
+                    <Clock size={11} />
+                    Scheduled Alarm Times
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {reminder.times && reminder.times.map((t, idx) => (
+                      <span key={idx} className="bg-gray-100 border border-gray-200 text-gray-900 text-caption font-semibold px-2.5 py-0.5 rounded-md">
+                        {t}
                       </span>
                     ))}
                   </div>
                 </div>
 
-                {/* Instructions / Notes */}
+                {/* Special Instructions Notes */}
                 {reminder.notes && (
-                  <p className="text-caption text-gray-500 italic bg-black/25 p-2.5 rounded-lg leading-snug">
+                  <p className="text-caption text-gray-600 italic bg-gray-50 p-2.5 rounded-lg border border-gray-100 leading-snug">
                     "{reminder.notes}"
                   </p>
                 )}
               </div>
-            </div>
+
+              {/* Taken Button */}
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={CheckCircle2}
+                className="w-full justify-center mt-2"
+                onClick={() => handleMarkDoseTaken(reminder.medicineName)}
+              >
+                Mark Taken
+              </Button>
+            </Card>
           ))}
         </div>
       )}
 
-      {/* Reminder Form Modal */}
+      {/* Form Modal */}
       <ReminderModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

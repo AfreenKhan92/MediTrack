@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
-import { Activity, ShieldAlert, Key, Mail, User, Loader2 } from 'lucide-react';
+import { Activity, ShieldAlert, Key, Mail, User } from 'lucide-react';
+import { showToast } from '../utils/toast';
+import Button from '../components/Button';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -17,66 +19,69 @@ const Register = () => {
     e.preventDefault();
     setLocalError('');
 
-    // Client-side validations
     if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters long');
+      const errMsg = 'Password must be at least 6 characters long';
+      setLocalError(errMsg);
+      showToast.error(errMsg);
       return;
     }
 
     if (password !== confirmPassword) {
-      setLocalError('Passwords do not match');
+      const errMsg = 'Passwords do not match';
+      setLocalError(errMsg);
+      showToast.error(errMsg);
       return;
     }
 
     const success = await register(name, email, password);
     if (success) {
+      showToast.success('Account created successfully! Welcome to MediTrack.');
       navigate('/dashboard');
+    } else {
+      showToast.error('Registration failed. Please try again.');
     }
   };
 
   const displayError = localError || apiError;
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4">
-      {/* Background gradients */}
-      <div className="gradient-bg" />
-
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       {/* Signup Form Container */}
-      <div className="glass-panel w-full max-w-[420px] p-8 sm:p-10 animate-fade-in">
+      <div className="bg-white border border-gray-200 shadow-md rounded-xl w-full max-w-[400px] p-8 sm:p-10 animate-fade-in">
         {/* Logo and Greeting */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center shadow-lg shadow-primary-500/20 mb-4 animate-pulse-glow">
-            <Activity size={24} className="text-white" />
+          <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center mb-3">
+            <Activity size={20} />
           </div>
-          <h2 className="text-title text-white mb-1.5 font-bold">Create Account</h2>
-          <p className="text-caption text-gray-400 max-w-[280px]">
+          <h2 className="text-subtitle font-bold text-gray-900 mb-1">Create Account</h2>
+          <p className="text-caption text-gray-500 max-w-[280px]">
             Join MediTrack to easily organize and track family health records
           </p>
         </div>
 
         {/* Validation Errors Alert */}
         {displayError && (
-          <div className="flex items-start gap-2.5 bg-red-500/10 border border-red-500/20 text-red-400 p-3.5 rounded-xl mb-6 text-sm animate-scale-in">
-            <ShieldAlert size={18} className="flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-5 text-caption animate-scale-in font-medium">
+            <ShieldAlert size={16} className="flex-shrink-0 mt-0.5" />
             <span className="leading-normal">{displayError}</span>
           </div>
         )}
 
         {/* Signup Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* Full Name input */}
           <div className="form-group mb-0">
             <label className="form-label" htmlFor="name">
               Full Name
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                <User size={16} />
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                <User size={15} />
               </span>
               <input
                 type="text"
                 id="name"
-                className="form-input pl-11"
+                className="form-input pl-10"
                 placeholder="e.g. John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -92,13 +97,13 @@ const Register = () => {
               Email Address
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                <Mail size={16} />
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                <Mail size={15} />
               </span>
               <input
                 type="email"
                 id="email"
-                className="form-input pl-11"
+                className="form-input pl-10"
                 placeholder="john@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -114,13 +119,13 @@ const Register = () => {
               Password
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                <Key size={16} />
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                <Key size={15} />
               </span>
               <input
                 type="password"
                 id="password"
-                className="form-input pl-11"
+                className="form-input pl-10"
                 placeholder="min 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -136,13 +141,13 @@ const Register = () => {
               Confirm Password
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                <Key size={16} />
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                <Key size={15} />
               </span>
               <input
                 type="password"
                 id="confirmPassword"
-                className="form-input pl-11"
+                className="form-input pl-10"
                 placeholder="confirm password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -153,28 +158,22 @@ const Register = () => {
           </div>
 
           {/* Submit Button */}
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary w-full py-3.5 mt-2 flex items-center justify-center gap-2"
-            disabled={loading}
+            variant="primary"
+            loading={loading}
+            className="w-full py-3 mt-2"
           >
-            {loading ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                <span>Creating Account...</span>
-              </>
-            ) : (
-              <span>Register Account</span>
-            )}
-          </button>
+            Register Account
+          </Button>
         </form>
 
         {/* Redirect Footer */}
-        <div className="mt-8 text-center text-sm text-gray-400 border-t border-dark-border pt-6">
+        <div className="mt-6 text-center text-caption text-gray-500 border-t border-gray-100 pt-5">
           <span>Already have an account? </span>
           <Link
             to="/login"
-            className="text-primary-400 font-semibold hover:text-primary-300 transition-colors duration-200"
+            className="text-gray-900 font-bold hover:underline"
           >
             Login
           </Link>

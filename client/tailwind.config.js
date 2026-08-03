@@ -6,160 +6,86 @@ export default {
   ],
   theme: {
     extend: {
-      // ──────────────────────────────────────────────────
-      // Color System — Healthcare Dashboard Palette
-      // ──────────────────────────────────────────────────
       colors: {
+        // Modern White & Blue Healthcare Design System
         primary: {
-          50:  '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          DEFAULT: '#6366f1',
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB', // Core Accent Blue
+          700: '#1D4ED8', // Core Hover Blue
+          800: '#1E40AF',
+          900: '#1E3A8A',
         },
-        secondary: {
-          50:  '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#10b981',
+        surface: {
+          50: '#F8FAFC',  // Hover background
+          100: '#F1F5F9',
+          200: '#E2E8F0', // Light border
+          300: '#CBD5E1',
+          800: '#1E293B',
+          900: '#0F172A', // Dark text
+        },
+        // Healthcare Status Colors
+        emerald: {
+          50: '#ECFDF5',
+          100: '#D1FAE5',
           600: '#059669',
           700: '#047857',
-          800: '#065f46',
-          900: '#064e3b',
-          DEFAULT: '#10b981',
         },
-        // Healthcare-specific semantic colors
-        health: {
-          critical: '#ef4444',
-          warning:  '#f59e0b',
-          stable:   '#10b981',
-          info:     '#3b82f6',
+        amber: {
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          600: '#D97706',
+          700: '#B45309',
         },
-        // Dark mode surface scale
-        dark: {
-          app:     '#0b0f19',
-          surface: '#111827',
-          card:    '#1a2234',
-          hover:   '#1f2937',
-          border:  'rgba(255, 255, 255, 0.08)',
-        },
+        red: {
+          50: '#FEF2F2',
+          100: '#FEE2E2',
+          600: '#DC2626',
+          700: '#B91C1C',
+        }
       },
-
-      // ──────────────────────────────────────────────────
-      // Typography — Responsive Fluid Type Scale
-      // ──────────────────────────────────────────────────
       fontFamily: {
-        sans:    ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        heading: ['Outfit', 'sans-serif'],
-        mono:    ['JetBrains Mono', 'Fira Code', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        heading: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {
-        'display':  ['3.5rem',  { lineHeight: '1.1',  letterSpacing: '-0.03em', fontWeight: '800' }],
-        'headline': ['2.25rem', { lineHeight: '1.2',  letterSpacing: '-0.025em', fontWeight: '700' }],
-        'title':    ['1.5rem',  { lineHeight: '1.3',  letterSpacing: '-0.02em', fontWeight: '600' }],
-        'subtitle': ['1.125rem',{ lineHeight: '1.4',  letterSpacing: '-0.01em', fontWeight: '500' }],
-        'body':     ['0.9375rem', { lineHeight: '1.6', letterSpacing: '0' }],
-        'caption':  ['0.8125rem', { lineHeight: '1.5', letterSpacing: '0.01em' }],
-        'overline': ['0.6875rem', { lineHeight: '1.4', letterSpacing: '0.08em', fontWeight: '600' }],
-      },
-
-      // ──────────────────────────────────────────────────
-      // Modern Spacing System — 4px base grid
-      // ──────────────────────────────────────────────────
-      spacing: {
-        '4.5': '1.125rem',
-        '13':  '3.25rem',
-        '15':  '3.75rem',
-        '18':  '4.5rem',
-        '22':  '5.5rem',
-        '26':  '6.5rem',
-        '30':  '7.5rem',
-        '34':  '8.5rem',
-        '38':  '9.5rem',
-      },
-
-      // ──────────────────────────────────────────────────
-      // Layout & Sizing
-      // ──────────────────────────────────────────────────
-      maxWidth: {
-        'dashboard': '1400px',
-        'form':      '480px',
-        'card':      '360px',
+        'display': ['2.25rem', { lineHeight: '2.5rem', letterSpacing: '-0.03em' }],
+        'headline': ['1.75rem', { lineHeight: '2.125rem', letterSpacing: '-0.02em' }],
+        'title': ['1.375rem', { lineHeight: '1.75rem', letterSpacing: '-0.01em' }],
+        'subtitle': ['1.125rem', { lineHeight: '1.5rem', letterSpacing: '-0.01em' }],
+        'body': ['0.9375rem', { lineHeight: '1.375rem' }],
+        'caption': ['0.8125rem', { lineHeight: '1.125rem' }],
       },
       borderRadius: {
-        '4xl': '2rem',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
       },
-
-      // ──────────────────────────────────────────────────
-      // Shadow System
-      // ──────────────────────────────────────────────────
       boxShadow: {
-        'glass':        '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-        'glow-primary': '0 0 20px rgba(99, 102, 241, 0.3)',
-        'glow-success': '0 0 20px rgba(16, 185, 129, 0.3)',
-        'glow-danger':  '0 0 20px rgba(239, 68, 68, 0.3)',
-        'card':         '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2)',
-        'card-hover':   '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+        'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03)',
+        'popover': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03)',
       },
-
-      // ──────────────────────────────────────────────────
-      // Backdrop Blur
-      // ──────────────────────────────────────────────────
-      backdropBlur: {
-        xs: '2px',
-      },
-
-      // ──────────────────────────────────────────────────
-      // Animation & Transitions
-      // ──────────────────────────────────────────────────
-      keyframes: {
-        'fade-in': {
-          '0%':   { opacity: '0', transform: 'translateY(8px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        'fade-in-up': {
-          '0%':   { opacity: '0', transform: 'translateY(16px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        'slide-in-right': {
-          '0%':   { opacity: '0', transform: 'translateX(20px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-        'scale-in': {
-          '0%':   { opacity: '0', transform: 'scale(0.95)' },
-          '100%': { opacity: '1', transform: 'scale(1)' },
-        },
-        'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 8px rgba(99, 102, 241, 0.4)' },
-          '50%':      { boxShadow: '0 0 20px rgba(99, 102, 241, 0.6)' },
-        },
-        'shimmer': {
-          '0%':   { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
-        },
+      maxWidth: {
+        'dashboard': '1440px',
+        'form': '640px',
       },
       animation: {
-        'fade-in':        'fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        'fade-in-up':     'fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        'slide-in-right': 'slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        'scale-in':       'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        'pulse-glow':     'pulse-glow 2s ease-in-out infinite',
-        'shimmer':        'shimmer 2s linear infinite',
+        'fade-in': 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        'scale-in': 'scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
       },
-
-      // ──────────────────────────────────────────────────
-      // Transition Timing
-      // ──────────────────────────────────────────────────
-      transitionTimingFunction: {
-        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        scaleIn: {
+          '0%': { opacity: '0', transform: 'scale(0.97)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
       },
     },
   },

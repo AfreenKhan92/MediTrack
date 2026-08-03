@@ -8,14 +8,18 @@ import {
   Heart, 
   Clock, 
   MapPin, 
-  User, 
-  ShieldAlert, 
   AlertCircle,
   Loader2,
   Filter
 } from 'lucide-react';
 import appointmentService from '../services/appointmentService';
 import familyService from '../services/familyService';
+import { showToast } from '../utils/toast';
+import { SkeletonLoader } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
+import Button from '../components/Button';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 
 // Reusable Appointment Modal Component (Add / Edit)
 const AppointmentModal = ({ isOpen, onClose, onSubmit, appointment, familyMembers, loading }) => {
@@ -34,7 +38,6 @@ const AppointmentModal = ({ isOpen, onClose, onSubmit, appointment, familyMember
       setSpecialty(appointment.specialty || '');
       setHospital(appointment.hospital || '');
       
-      // Format date for datetime-local input (YYYY-MM-DDTHH:MM)
       if (appointment.appointmentDate) {
         const d = new Date(appointment.appointmentDate);
         const pad = (num) => String(num).padStart(2, '0');
@@ -91,28 +94,26 @@ const AppointmentModal = ({ isOpen, onClose, onSubmit, appointment, familyMember
     });
   };
 
-  const statuses = ['Scheduled', 'Completed', 'Cancelled'];
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-form p-6 sm:p-8 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-gray-200 shadow-xl rounded-xl w-full max-w-form p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-dark-border pb-4 mb-5">
-          <h3 className="text-title text-white flex items-center gap-2">
-            <CalendarDays size={20} className="text-primary-400" />
-            {appointment ? 'Edit Appointment Details' : 'Schedule Appointment'}
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-5">
+          <h3 className="text-subtitle font-bold text-gray-900 flex items-center gap-2">
+            <CalendarDays size={18} className="text-gray-900" />
+            {appointment ? 'Edit Appointment' : 'Book New Appointment'}
           </h3>
           <button 
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Form Verification Warning */}
+        {/* Validation Alert */}
         {validationError && (
-          <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl mb-4 text-xs">
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-caption font-medium">
             <AlertCircle size={14} className="flex-shrink-0" />
             <span>{validationError}</span>
           </div>
@@ -120,51 +121,51 @@ const AppointmentModal = ({ isOpen, onClose, onSubmit, appointment, familyMember
 
         {/* Modal Form */}
         <form onSubmit={handleFormSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="form-group mb-0">
-              <label className="form-label">Doctor Name</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="e.g. Dr. Robert Vance"
-                value={doctorName}
-                onChange={(e) => setDoctorName(e.target.value)}
-                disabled={loading}
-                required
-              />
-            </div>
-
-            <div className="form-group mb-0">
-              <label className="form-label">Specialty (Optional)</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="e.g. Cardiologist"
-                value={specialty}
-                onChange={(e) => setSpecialty(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-          </div>
-
           <div className="form-group mb-0">
-            <label className="form-label">Hospital / Clinic</label>
+            <label className="form-label">Doctor Name</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="e.g. Mercy Health Center"
-              value={hospital}
-              onChange={(e) => setHospital(e.target.value)}
+              placeholder="e.g. Dr. Sarah Jenkins"
+              value={doctorName}
+              onChange={(e) => setDoctorName(e.target.value)}
               disabled={loading}
               required
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="form-group mb-0">
+              <label className="form-label">Specialty (Optional)</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="e.g. Cardiologist, General"
+                value={specialty}
+                onChange={(e) => setSpecialty(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group mb-0">
+              <label className="form-label">Hospital / Clinic</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="e.g. City Health Center"
+                value={hospital}
+                onChange={(e) => setHospital(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+          </div>
+
           <div className="form-group mb-0">
-            <label className="form-label">Date & Time</label>
+            <label className="form-label">Appointment Date & Time</label>
             <input 
               type="datetime-local" 
-              className="form-input"
+              className="form-input" 
               value={appointmentDate}
               onChange={(e) => setAppointmentDate(e.target.value)}
               disabled={loading}
@@ -174,14 +175,14 @@ const AppointmentModal = ({ isOpen, onClose, onSubmit, appointment, familyMember
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="form-group mb-0">
-              <label className="form-label">For Family Member</label>
+              <label className="form-label">Patient Profile</label>
               <select 
                 className="form-select"
                 value={familyMember}
                 onChange={(e) => setFamilyMember(e.target.value)}
                 disabled={loading}
               >
-                <option value="">Self</option>
+                <option value="">Self (Main User)</option>
                 {familyMembers.map(m => (
                   <option key={m._id} value={m._id}>{m.name} ({m.relation})</option>
                 ))}
@@ -196,7 +197,9 @@ const AppointmentModal = ({ isOpen, onClose, onSubmit, appointment, familyMember
                 onChange={(e) => setStatus(e.target.value)}
                 disabled={loading}
               >
-                {statuses.map(st => <option key={st} value={st}>{st}</option>)}
+                <option value="Scheduled">Scheduled</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
               </select>
             </div>
           </div>
@@ -214,23 +217,21 @@ const AppointmentModal = ({ isOpen, onClose, onSubmit, appointment, familyMember
           </div>
 
           {/* Modal Actions */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-dark-border mt-6">
-            <button 
-              type="button" 
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 mt-5">
+            <Button 
+              variant="secondary"
               onClick={onClose} 
-              className="btn btn-outline py-2.5 px-4 text-xs"
               disabled={loading}
             >
               Cancel
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="submit" 
-              className="btn btn-primary py-2.5 px-5 text-xs flex items-center gap-1.5"
-              disabled={loading}
+              variant="primary"
+              loading={loading}
             >
-              {loading && <Loader2 size={14} className="animate-spin" />}
-              <span>{appointment ? 'Save Changes' : 'Book Visit'}</span>
-            </button>
+              {appointment ? 'Save Changes' : 'Book Visit'}
+            </Button>
           </div>
         </form>
       </div>
@@ -255,7 +256,6 @@ const Appointments = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState(null);
 
-  // Fallback Mocks
   const mockFamilyMembers = [
     { _id: 'mock1', name: 'John Doe', relation: 'Self' },
     { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse' },
@@ -279,7 +279,7 @@ const Appointments = () => {
       specialty: 'Cardiologist',
       hospital: 'Mercy Center',
       appointmentDate: new Date(Date.now() + 24 * 60 * 60 * 1000 * 5).toISOString(),
-      familyMember: null, // Self
+      familyMember: null,
       status: 'Scheduled',
       notes: 'Fasting required for blood tests prior to ECG.'
     },
@@ -335,7 +335,6 @@ const Appointments = () => {
     setSubmitting(true);
     try {
       if (selectedAppt) {
-        // Edit flow
         if (selectedAppt._id.startsWith('mock') || selectedAppt._id.startsWith('local_')) {
           const matchedMember = familyMembers.find(m => m._id === formData.familyMember) || null;
           setAppointments(appointments.map(a => a._id === selectedAppt._id 
@@ -346,8 +345,8 @@ const Appointments = () => {
           const updated = await appointmentService.updateAppointment(selectedAppt._id, formData);
           setAppointments(appointments.map(a => a._id === selectedAppt._id ? updated : a));
         }
+        showToast.success(`Appointment with Dr. ${formData.doctorName} updated!`);
       } else {
-        // Add flow
         if (offlineMode) {
           const matchedMember = familyMembers.find(m => m._id === formData.familyMember) || null;
           const mockNewAppt = {
@@ -360,10 +359,12 @@ const Appointments = () => {
           const created = await appointmentService.createAppointment(formData);
           setAppointments([...appointments, created]);
         }
+        showToast.success(`Appointment with Dr. ${formData.doctorName} scheduled!`);
       }
       setIsModalOpen(false);
     } catch (err) {
       console.error('Failed to submit appointment form:', err);
+      showToast.error(err.response?.data?.message || 'Failed to save appointment.');
     } finally {
       setSubmitting(false);
     }
@@ -381,16 +382,16 @@ const Appointments = () => {
         await appointmentService.deleteAppointment(id);
         setAppointments(appointments.filter(a => a._id !== id));
       }
+      showToast.success('Appointment cancelled and deleted.');
     } catch (err) {
       console.error('Failed to delete appointment:', err);
+      showToast.error('Failed to cancel appointment.');
     }
   };
 
-  // Filter application
   const filteredAppts = appointments.filter(appt => {
     const matchesStatus = statusFilter === 'All' || appt.status === statusFilter;
     
-    // Evaluate family member matching
     let matchesMember = true;
     if (memberFilter !== 'All') {
       if (memberFilter === 'Self') {
@@ -402,59 +403,63 @@ const Appointments = () => {
     }
 
     return matchesStatus && matchesMember;
-  }).sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate)); // Sorted by upcoming time
+  }).sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate));
 
   const statuses = ['All', 'Scheduled', 'Completed', 'Cancelled'];
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 size={32} className="animate-spin text-primary-500 mb-4" />
-        <p className="text-gray-400 text-sm">Loading appointments list...</p>
+      <div className="animate-fade-in space-y-6">
+        <div className="page-header">
+          <div className="w-48 h-7 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="w-72 h-4 bg-gray-100 rounded animate-pulse" />
+        </div>
+        <SkeletonLoader type="card" count={3} />
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="page-header mb-0">
-          <h2 className="page-title text-gradient bg-gradient-to-r from-primary-400 to-secondary-400">
-            Doctor Appointments
+          <h2 className="page-title text-gray-900 font-bold">
+            Doctor Appointments Timeline
           </h2>
-          <p className="page-subtitle">Schedule, trace, and manage family medical consultations</p>
+          <p className="page-subtitle text-gray-500">Schedule, trace, and manage family medical consultations in a timeline view</p>
         </div>
-        <button 
+        <Button 
+          variant="primary"
+          icon={Plus}
           onClick={handleOpenAddModal}
-          className="btn btn-primary btn-sm self-start sm:self-auto flex items-center gap-1.5"
+          className="self-start sm:self-auto"
         >
-          <Plus size={16} />
           New Appointment
-        </button>
+        </Button>
       </div>
 
       {/* Offline Alert Warning */}
       {error && (
-        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-4 py-2.5 rounded-xl text-sm animate-scale-in">
-          <AlertCircle size={16} />
+        <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-700 px-3.5 py-2.5 rounded-lg text-caption font-medium">
+          <AlertCircle size={16} className="text-gray-900" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Filters Bar */}
-      <div className="glass-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3" hoverable={false}>
         {/* Status Filter */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter size={14} className="text-gray-500" />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Filter size={14} className="text-gray-400" />
           {statuses.map(st => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all duration-200
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all
                 ${statusFilter === st 
-                  ? 'bg-primary-500 text-white' 
-                  : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'}`}
             >
               {st === 'All' ? 'All status' : st}
             </button>
@@ -465,7 +470,7 @@ const Appointments = () => {
         <div className="flex items-center gap-2">
           <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Patient:</label>
           <select 
-            className="form-select py-1.5 px-3 text-xs w-44 bg-white/5 border-white/10"
+            className="form-select py-1.5 px-3 text-caption w-44 bg-gray-50 border-gray-200"
             value={memberFilter}
             onChange={(e) => setMemberFilter(e.target.value)}
           >
@@ -476,95 +481,100 @@ const Appointments = () => {
             ))}
           </select>
         </div>
-      </div>
+      </Card>
 
-      {/* Appointments Grid */}
+      {/* Appointments Timeline View */}
       {filteredAppts.length === 0 ? (
-        <div className="empty-state">
-          <CalendarDays size={48} className="mx-auto mb-4 text-gray-600 animate-pulse" />
-          <h3 className="text-title text-gray-300 mb-2">No appointments scheduled</h3>
-          <p className="text-body text-gray-500 max-w-sm mx-auto">
-            Try adjusting your search filters or schedule a new doctor consultation.
-          </p>
-        </div>
+        <EmptyState
+          icon={CalendarDays}
+          title="No appointments scheduled"
+          description="Try adjusting your search filters or schedule a new doctor consultation."
+          actionText="Book New Appointment"
+          onAction={handleOpenAddModal}
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAppts.map(appt => (
-            <div key={appt._id} className="glass-card flex flex-col justify-between group animate-fade-in">
-              <div className="space-y-4">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
-                      <Heart size={18} />
+        <div className="relative pl-6 sm:pl-8 space-y-5 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-200">
+          {filteredAppts.map(appt => {
+            const isToday = new Date(appt.appointmentDate).toDateString() === new Date().toDateString();
+
+            return (
+              <Card key={appt._id} className="relative flex flex-col justify-between group animate-fade-in">
+                <span className={`absolute left-[-21px] sm:left-[-25px] top-6 w-3.5 h-3.5 rounded-full border-2 border-white ${isToday ? 'bg-black ring-2 ring-gray-300' : 'bg-gray-400'}`} />
+
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 text-gray-900 flex items-center justify-center flex-shrink-0 mt-0.5 border border-gray-200">
+                        <Heart size={18} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-body font-bold text-gray-900 leading-tight">
+                            Dr. {appt.doctorName}
+                          </h4>
+                          {isToday && <Badge variant="primary" className="text-[9px]">Today</Badge>}
+                        </div>
+                        {appt.specialty && (
+                          <p className="text-[11px] text-gray-500 font-medium mt-0.5">{appt.specialty}</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-body font-bold text-white leading-tight">
-                        Dr. {appt.doctorName}
-                      </h4>
-                      {appt.specialty && (
-                        <p className="text-[11px] text-gray-400 font-medium mt-0.5">{appt.specialty}</p>
-                      )}
+
+                    {/* Actions */}
+                    <div className="flex gap-1">
+                      <button 
+                        onClick={() => handleOpenEditModal(appt)}
+                        className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
+                        title="Edit Appointment"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteAppt(appt._id)}
+                        className="w-7 h-7 rounded-md hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
+                        title="Cancel Appointment"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Hover Actions */}
-                  <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
-                    <button 
-                      onClick={() => handleOpenEditModal(appt)}
-                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
-                      title="Edit Appointment"
-                    >
-                      <Pencil size={11} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteAppt(appt._id)}
-                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-red-500/10 flex items-center justify-center text-gray-400 hover:text-red-400 transition-all duration-200"
-                      title="Cancel Appointment"
-                    >
-                      <Trash2 size={11} />
-                    </button>
+                  {/* Patient / Status indicators */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
+                    <Badge variant={appt.status === 'Scheduled' ? 'warning' : appt.status === 'Completed' ? 'success' : 'danger'} className="text-[9px]">
+                      {appt.status}
+                    </Badge>
+                    <Badge variant="secondary" className="text-[9px]">
+                      {appt.familyMember ? `${appt.familyMember.name} (${appt.familyMember.relation})` : 'Self'}
+                    </Badge>
                   </div>
-                </div>
 
-                {/* Patient / Status indicators */}
-                <div className="flex items-center gap-2 pt-2 border-t border-dark-border">
-                  <span className={`badge text-[9px] py-0.5
-                    ${appt.status === 'Scheduled' ? 'badge-primary' : ''}
-                    ${appt.status === 'Completed' ? 'badge-success' : ''}
-                    ${appt.status === 'Cancelled' ? 'badge-danger' : ''}
-                  `}>
-                    {appt.status}
-                  </span>
-                  <span className="badge badge-info text-[9px] py-0.5">
-                    {appt.familyMember ? `${appt.familyMember.name} (${appt.familyMember.relation})` : 'Self'}
-                  </span>
-                </div>
-
-                {/* Schedule details */}
-                <div className="space-y-2 text-caption text-gray-400 pt-1">
-                  <div className="flex items-center gap-2">
-                    <MapPin size={13} className="text-gray-500 flex-shrink-0" />
-                    <span className="truncate">{appt.hospital}</span>
+                  {/* Schedule details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-caption text-gray-600 pt-1">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={14} className="text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{appt.hospital}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-gray-400 flex-shrink-0" />
+                      <span>
+                        {new Date(appt.appointmentDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at{' '}
+                        {new Date(appt.appointmentDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock size={13} className="text-gray-500 flex-shrink-0" />
-                    <span>
-                      {new Date(appt.appointmentDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at{' '}
-                      {new Date(appt.appointmentDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                </div>
 
-                {/* Notes */}
-                {appt.notes && (
-                  <p className="text-caption text-gray-500 italic bg-black/25 p-2.5 rounded-lg leading-snug">
-                    "{appt.notes}"
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
+                  {/* Notes */}
+                  {appt.notes && (
+                    <p className="text-caption text-gray-600 italic bg-gray-50 p-2.5 rounded-lg border border-gray-100 leading-snug">
+                      "{appt.notes}"
+                    </p>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 

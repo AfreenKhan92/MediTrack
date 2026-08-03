@@ -8,10 +8,7 @@ const DashboardLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="relative min-h-screen bg-dark-app">
-      {/* Ambient background effect */}
-      <div className="gradient-bg" />
-
+    <div className="relative min-h-screen bg-white text-gray-900">
       {/* Sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -24,9 +21,9 @@ const DashboardLayout = () => {
       <div
         className={`
           min-h-screen flex flex-col
-          transition-all duration-300 ease-out-expo
-          lg:ml-[260px]
-          ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'}
+          transition-all duration-200 ease-out
+          lg:ml-[250px]
+          ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[250px]'}
         `}
       >
         {/* Top Navbar */}
@@ -43,9 +40,9 @@ const DashboardLayout = () => {
         </main>
 
         {/* Footer */}
-        <footer className="px-6 py-4 border-t border-dark-border text-center">
-          <p className="text-xs text-gray-600">
-            © {new Date().getFullYear()} MediTrack — Family Health Record Manager
+        <footer className="px-6 py-4 border-t border-gray-200 text-center">
+          <p className="text-caption text-gray-500 font-medium">
+            © {new Date().getFullYear()} MediTrack — Minimal Family Health Records Manager
           </p>
         </footer>
       </div>

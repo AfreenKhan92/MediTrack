@@ -5,13 +5,17 @@ import {
   Pencil, 
   Trash2, 
   X, 
-  Activity, 
-  ShieldAlert, 
   AlertCircle,
   ShieldAlert as ErrorIcon,
-  Loader2
+  Heart
 } from 'lucide-react';
 import familyService from '../services/familyService';
+import { showToast } from '../utils/toast';
+import { SkeletonLoader } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
+import Button from '../components/Button';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 
 // Reusable Modal Component for Add / Edit
 const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
@@ -58,7 +62,6 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
       return;
     }
 
-    // Process allergies: comma-separated string to array of trimmed strings
     const allergyList = allergies
       ? allergies.split(',').map(a => a.trim()).filter(a => a !== '')
       : [];
@@ -77,17 +80,19 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-form p-6 sm:p-8 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-gray-200 shadow-xl rounded-2xl w-full max-w-form p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-dark-border pb-4 mb-5">
-          <h3 className="text-title text-white flex items-center gap-2">
-            <Users size={20} className="text-primary-400" />
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-5">
+          <h3 className="text-subtitle font-bold text-gray-900 flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+              <Users size={16} />
+            </div>
             {member ? 'Edit Member Profile' : 'Add Family Member'}
           </h3>
           <button 
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-gray-500 transition-colors"
           >
             <X size={16} />
           </button>
@@ -95,7 +100,7 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
 
         {/* Validation Warning Alert */}
         {validationError && (
-          <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl mb-4 text-xs">
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl mb-4 text-caption font-medium">
             <AlertCircle size={14} className="flex-shrink-0" />
             <span>{validationError}</span>
           </div>
@@ -116,7 +121,7 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="form-group mb-0">
               <label className="form-label">Relation</label>
               <select 
@@ -180,23 +185,21 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
           </div>
 
           {/* Modal Actions */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-dark-border mt-6">
-            <button 
-              type="button" 
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 mt-5">
+            <Button 
+              variant="secondary"
               onClick={onClose} 
-              className="btn btn-outline py-2.5 px-4 text-xs"
               disabled={loading}
             >
               Cancel
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="submit" 
-              className="btn btn-primary py-2.5 px-5 text-xs flex items-center gap-1.5"
-              disabled={loading}
+              variant="primary"
+              loading={loading}
             >
-              {loading && <Loader2 size={14} className="animate-spin" />}
-              <span>{member ? 'Save Changes' : 'Create Profile'}</span>
-            </button>
+              {member ? 'Save Changes' : 'Create Profile'}
+            </Button>
           </div>
         </form>
       </div>
@@ -216,11 +219,10 @@ const FamilyMembers = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
 
-  // Mock data fallbacks for demonstration when database is not connected
   const mockFamilyMembers = [
-    { _id: 'mock1', name: 'John Doe', relation: 'Self', age: 34, bloodGroup: 'O+', allergies: ['Penicillin'], notes: 'Main account holder.' },
-    { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse', age: 32, bloodGroup: 'A+', allergies: ['Pollen'], notes: 'Migraine history.' },
-    { _id: 'mock3', name: 'Leo Doe', relation: 'Child', age: 5, bloodGroup: 'O+', allergies: ['Peanuts', 'Dust'], notes: 'Asthma history.' }
+    { _id: 'mock1', name: 'John Doe', relation: 'Self', age: 34, bloodGroup: 'O+', allergies: ['Penicillin'], notes: 'Main account holder.', status: 'Healthy' },
+    { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse', age: 32, bloodGroup: 'A+', allergies: ['Pollen'], notes: 'Migraine history.', status: 'Healthy' },
+    { _id: 'mock3', name: 'Leo Doe', relation: 'Child', age: 5, bloodGroup: 'O+', allergies: ['Peanuts', 'Dust'], notes: 'Asthma history.', status: 'Checkup Due' }
   ];
 
   const fetchMembers = async () => {
@@ -258,30 +260,31 @@ const FamilyMembers = () => {
     setSubmitting(true);
     try {
       if (selectedMember) {
-        // Edit flow
         if (selectedMember._id.startsWith('mock')) {
-          // Edit Mock Local item
           setMembers(members.map(m => m._id === selectedMember._id ? { ...m, ...formData } : m));
         } else {
           const updated = await familyService.updateMember(selectedMember._id, formData);
           setMembers(members.map(m => m._id === selectedMember._id ? updated : m));
         }
+        showToast.success(`Profile for ${formData.name} updated successfully!`);
       } else {
-        // Add flow
         if (offlineMode) {
           const mockNewMember = {
             _id: 'mock_' + Date.now(),
-            ...formData
+            ...formData,
+            status: 'Healthy'
           };
           setMembers([...members, mockNewMember]);
         } else {
           const created = await familyService.createMember(formData);
           setMembers([...members, created]);
         }
+        showToast.success(`Family member ${formData.name} added!`);
       }
       setIsModalOpen(false);
     } catch (err) {
       console.error('Failed to submit family member form data:', err);
+      showToast.error(err.response?.data?.message || 'Failed to save family member.');
     } finally {
       setSubmitting(false);
     }
@@ -299,136 +302,154 @@ const FamilyMembers = () => {
         await familyService.deleteMember(id);
         setMembers(members.filter(m => m._id !== id));
       }
+      showToast.success('Family member profile removed.');
     } catch (err) {
       console.error('Failed to delete family member profile:', err);
+      showToast.error('Failed to remove family member.');
     }
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 size={32} className="animate-spin text-primary-500 mb-4" />
-        <p className="text-gray-400 text-sm">Loading family registry...</p>
+      <div className="animate-fade-in space-y-6">
+        <div className="page-header">
+          <div className="w-48 h-7 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="w-72 h-4 bg-gray-100 rounded animate-pulse" />
+        </div>
+        <SkeletonLoader type="card" count={3} />
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="page-header mb-0">
-          <h2 className="page-title text-gradient bg-gradient-to-r from-primary-400 to-secondary-400">
-            Family Members
+          <h2 className="page-title text-gray-900 font-bold">
+            Family Profiles
           </h2>
-          <p className="page-subtitle">Track and configure health settings for your family profiles</p>
+          <p className="page-subtitle text-gray-500">Track and manage clinical records for your family members</p>
         </div>
-        <button 
+        <Button 
+          variant="primary"
+          icon={Plus}
           onClick={handleOpenAddModal}
-          className="btn btn-primary btn-sm self-start sm:self-auto flex items-center gap-1.5"
+          className="self-start sm:self-auto"
         >
-          <Plus size={16} />
           Add Member
-        </button>
+        </Button>
       </div>
 
       {/* Offline Mode Alert */}
       {error && (
-        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-4 py-2.5 rounded-xl text-sm animate-scale-in">
-          <ErrorIcon size={16} />
+        <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 px-3.5 py-2.5 rounded-xl text-caption font-medium">
+          <ErrorIcon size={16} className="text-blue-600" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Cards Grid */}
       {members.length === 0 ? (
-        <div className="empty-state">
-          <Users size={48} className="mx-auto mb-4 text-gray-600" />
-          <h3 className="text-title text-gray-300 mb-2">No family members found</h3>
-          <p className="text-body text-gray-500 max-w-md mx-auto">
-            Get started by adding profiles for children, spouses, or parents to organize health details in one place.
-          </p>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No family members found"
+          description="Get started by adding profiles for children, spouses, or parents to organize health details in one place."
+          actionText="Add Family Member"
+          onAction={handleOpenAddModal}
+        />
       ) : (
         <div className="grid-cards">
           {members.map(member => (
-            <div key={member._id} className="glass-card flex flex-col justify-between group animate-fade-in">
+            <Card key={member._id} className="flex flex-col justify-between group animate-fade-in">
               <div className="space-y-4">
                 {/* Profile Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-heading font-bold text-lg">
+                    {/* Blue Avatar */}
+                    <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-subtitle shadow-xs">
                       {member.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h4 className="text-body font-bold text-white leading-tight">{member.name}</h4>
-                      <span className="badge badge-primary text-[10px] py-0.5 mt-1">{member.relation}</span>
+                      <h4 className="text-body font-bold text-gray-900 leading-tight">{member.name}</h4>
+                      <Badge variant="primary" className="text-[10px] py-0.5 mt-1">{member.relation}</Badge>
                     </div>
                   </div>
                   
                   {/* Actions (Edit/Delete) */}
-                  <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="flex gap-1">
                     <button 
                       onClick={() => handleOpenEditModal(member)}
-                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+                      className="w-7 h-7 rounded-lg hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-gray-400 transition-colors"
                       title="Edit Profile"
                     >
-                      <Pencil size={12} />
+                      <Pencil size={14} />
                     </button>
                     <button 
                       onClick={() => handleDeleteMember(member._id)}
-                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-red-500/10 flex items-center justify-center text-gray-400 hover:text-red-400 transition-all duration-200"
+                      className="w-7 h-7 rounded-lg hover:bg-red-50 hover:text-red-600 flex items-center justify-center text-gray-400 transition-colors"
                       title="Delete Profile"
                     >
-                      <Trash2 size={12} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
 
-                {/* Health Metrics */}
-                <div className="grid grid-cols-2 gap-3 pt-3.5 border-t border-dark-border text-caption text-gray-400">
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Age</p>
-                    <p className="text-white font-medium">{member.age} years</p>
+                {/* Health Metrics & Status Badge */}
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200 text-caption text-gray-600">
+                  <div>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Age</p>
+                    <p className="text-gray-900 font-semibold">{member.age} years</p>
                   </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Blood Type</p>
-                    <p className="text-red-400 font-medium">{member.bloodGroup}</p>
+                  <div>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Blood Group</p>
+                    <p className="text-gray-900 font-semibold">{member.bloodGroup}</p>
                   </div>
                 </div>
 
+                {/* Health Status */}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-1">
+                    <Heart size={11} className="text-blue-600" />
+                    Status
+                  </span>
+                  <Badge variant={member.status === 'Checkup Due' ? 'warning' : 'success'} className="text-[10px]">
+                    {member.status || 'Healthy'}
+                  </Badge>
+                </div>
+
                 {/* Allergies */}
-                <div className="space-y-1 pt-1">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Allergies</p>
+                <div className="space-y-1 pt-1 border-t border-gray-100">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Allergies</p>
                   {member.allergies && member.allergies.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1">
                       {member.allergies.map((allergy, idx) => (
-                        <span key={idx} className="badge badge-danger text-[9px] lowercase font-normal px-2">
+                        <Badge key={idx} variant="secondary" className="text-[10px] lowercase font-normal px-2">
                           {allergy}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-caption text-gray-600 italic">None reported</p>
+                    <p className="text-caption text-gray-400 italic">None reported</p>
                   )}
                 </div>
 
                 {/* Notes */}
                 {member.notes && (
-                  <div className="space-y-1 pt-1.5 border-t border-white/5">
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Clinical Notes</p>
-                    <p className="text-caption text-gray-400 italic leading-snug">
+                  <div className="space-y-1 pt-1 border-t border-gray-100">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Clinical Notes</p>
+                    <p className="text-caption text-gray-600 italic leading-snug">
                       "{member.notes}"
                     </p>
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
 
-      {/* Reusable Form Modal */}
+      {/* Form Modal */}
       <FamilyMemberModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

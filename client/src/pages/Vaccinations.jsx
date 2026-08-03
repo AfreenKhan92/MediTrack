@@ -6,7 +6,6 @@ import {
   Trash2, 
   X, 
   CheckCircle2, 
-  Clock, 
   AlertCircle, 
   Loader2, 
   Filter,
@@ -15,6 +14,12 @@ import {
 } from 'lucide-react';
 import vaccineService from '../services/vaccineService';
 import familyService from '../services/familyService';
+import { showToast } from '../utils/toast';
+import { SkeletonLoader } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
+import Button from '../components/Button';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 
 // Reusable Vaccine Modal Component (Add / Edit)
 const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loading }) => {
@@ -35,7 +40,6 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
       setFamilyMember(vaccine.familyMember?._id || vaccine.familyMember || '');
       setStatus(vaccine.status || 'Administered');
       
-      // Format dates (YYYY-MM-DD) for HTML date inputs
       setDateAdministered(vaccine.dateAdministered ? vaccine.dateAdministered.split('T')[0] : '');
       setNextDueDate(vaccine.nextDueDate ? vaccine.nextDueDate.split('T')[0] : '');
       setAdministeredBy(vaccine.administeredBy || '');
@@ -84,25 +88,25 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
   const statuses = ['Administered', 'Scheduled', 'Overdue'];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-form p-6 sm:p-8 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-gray-200 shadow-xl rounded-xl w-full max-w-form p-6 sm:p-8 animate-scale-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-dark-border pb-4 mb-5">
-          <h3 className="text-title text-white flex items-center gap-2">
-            <Syringe size={20} className="text-primary-400" />
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-5">
+          <h3 className="text-subtitle font-bold text-gray-900 flex items-center gap-2">
+            <Syringe size={18} className="text-gray-900" />
             {vaccine ? 'Edit Vaccine Record' : 'Log Vaccination'}
           </h3>
           <button 
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Form Validation Warnings */}
+        {/* Validation Warnings */}
         {validationError && (
-          <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl mb-4 text-xs">
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-caption font-medium">
             <AlertCircle size={14} className="flex-shrink-0" />
             <span>{validationError}</span>
           </div>
@@ -141,14 +145,14 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="form-group mb-0">
-              <label className="form-label">For Family Member</label>
+              <label className="form-label">Patient Profile</label>
               <select 
                 className="form-select"
                 value={familyMember}
                 onChange={(e) => setFamilyMember(e.target.value)}
                 disabled={loading}
               >
-                <option value="">Self</option>
+                <option value="">Self (Main User)</option>
                 {familyMembers.map(m => (
                   <option key={m._id} value={m._id}>{m.name} ({m.relation})</option>
                 ))}
@@ -163,30 +167,28 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
                 onChange={(e) => setStatus(e.target.value)}
                 disabled={loading}
               >
-                {statuses.map(st => <option key={st} value={st}>{st}</option>)}
+                {statuses.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {status === 'Administered' && (
-              <div className="form-group mb-0">
-                <label className="form-label">Date Administered</label>
-                <input 
-                  type="date" 
-                  className="form-input"
-                  value={dateAdministered}
-                  onChange={(e) => setDateAdministered(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-            )}
+            <div className="form-group mb-0">
+              <label className="form-label">Date Administered</label>
+              <input 
+                type="date" 
+                className="form-input" 
+                value={dateAdministered}
+                onChange={(e) => setDateAdministered(e.target.value)}
+                disabled={loading || status !== 'Administered'}
+              />
+            </div>
 
             <div className="form-group mb-0">
               <label className="form-label">Next Due Date (Optional)</label>
               <input 
                 type="date" 
-                className="form-input"
+                className="form-input" 
                 value={nextDueDate}
                 onChange={(e) => setNextDueDate(e.target.value)}
                 disabled={loading}
@@ -195,11 +197,11 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
           </div>
 
           <div className="form-group mb-0">
-            <label className="form-label">Administered By / Clinic</label>
+            <label className="form-label">Clinic / Provider (Optional)</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="e.g. State Pediatric Center"
+              placeholder="e.g. St. Jude Children Hospital"
               value={administeredBy}
               onChange={(e) => setAdministeredBy(e.target.value)}
               disabled={loading}
@@ -210,7 +212,7 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
             <label className="form-label">Notes (Optional)</label>
             <textarea 
               className="form-textarea" 
-              placeholder="e.g. Left arm, check for swelling, next dose booster details..."
+              placeholder="e.g. Side effects, batch number..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               disabled={loading}
@@ -219,23 +221,21 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
           </div>
 
           {/* Modal Actions */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-dark-border mt-6">
-            <button 
-              type="button" 
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 mt-5">
+            <Button 
+              variant="secondary"
               onClick={onClose} 
-              className="btn btn-outline py-2.5 px-4 text-xs"
               disabled={loading}
             >
               Cancel
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="submit" 
-              className="btn btn-primary py-2.5 px-5 text-xs flex items-center gap-1.5"
-              disabled={loading}
+              variant="primary"
+              loading={loading}
             >
-              {loading && <Loader2 size={14} className="animate-spin" />}
-              <span>{vaccine ? 'Save Changes' : 'Record Vaccine'}</span>
-            </button>
+              {vaccine ? 'Save Changes' : 'Record Vaccination'}
+            </Button>
           </div>
         </form>
       </div>
@@ -243,7 +243,7 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
   );
 };
 
-// Main Vaccinations Tracker Component
+// Main Vaccinations Page Component
 const Vaccinations = () => {
   const [vaccines, setVaccines] = useState([]);
   const [familyMembers, setFamilyMembers] = useState([]);
@@ -260,7 +260,6 @@ const Vaccinations = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVaccine, setSelectedVaccine] = useState(null);
 
-  // Fallback Mocks
   const mockFamilyMembers = [
     { _id: 'mock1', name: 'John Doe', relation: 'Self' },
     { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse' },
@@ -270,36 +269,36 @@ const Vaccinations = () => {
   const mockVaccines = [
     {
       _id: 'mock1',
-      vaccineName: 'Polio Booster (IPV)',
-      doseNumber: 3,
+      vaccineName: 'MMR Booster',
+      doseNumber: 2,
       familyMember: { _id: 'mock3', name: 'Leo Doe', relation: 'Child' },
       status: 'Administered',
       dateAdministered: '2026-06-15T00:00:00.000Z',
-      nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000 * 12).toISOString(),
-      administeredBy: 'State Pediatric Clinic',
-      notes: 'No side effects reported. Redness at injection site cleared in 24h.'
+      nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000 * 365).toISOString(),
+      administeredBy: 'St. Jude Hospital',
+      notes: 'No adverse reactions noted.'
     },
     {
       _id: 'mock2',
-      vaccineName: 'Hepatitis B',
+      vaccineName: 'Influenza Annual',
       doseNumber: 1,
-      familyMember: null, // Self
-      status: 'Scheduled',
-      dateAdministered: null,
-      nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000 * 5).toISOString(),
-      administeredBy: 'Mercy Center Pharmacy',
-      notes: 'Bring vaccination pass.'
-    },
-    {
-      _id: 'mock3',
-      vaccineName: 'MMR Dose 2',
-      doseNumber: 2,
-      familyMember: { _id: 'mock3', name: 'Leo Doe', relation: 'Child' },
+      familyMember: { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse' },
       status: 'Overdue',
       dateAdministered: null,
       nextDueDate: new Date(Date.now() - 24 * 60 * 60 * 1000 * 30).toISOString(),
-      administeredBy: 'Pediatric Center',
-      notes: 'Urgent booster required.'
+      administeredBy: 'Mercy Center',
+      notes: 'Annual flu shot overdue.'
+    },
+    {
+      _id: 'mock3',
+      vaccineName: 'Tetanus Shot',
+      doseNumber: 1,
+      familyMember: null,
+      status: 'Scheduled',
+      dateAdministered: null,
+      nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000 * 10).toISOString(),
+      administeredBy: 'City Clinic',
+      notes: 'Decennial booster appointment.'
     }
   ];
 
@@ -334,8 +333,8 @@ const Vaccinations = () => {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (vacc) => {
-    setSelectedVaccine(vacc);
+  const handleOpenEditModal = (vaccine) => {
+    setSelectedVaccine(vaccine);
     setIsModalOpen(true);
   };
 
@@ -343,7 +342,6 @@ const Vaccinations = () => {
     setSubmitting(true);
     try {
       if (selectedVaccine) {
-        // Edit flow
         if (selectedVaccine._id.startsWith('mock') || selectedVaccine._id.startsWith('local_')) {
           const matchedMember = familyMembers.find(m => m._id === formData.familyMember) || null;
           setVaccines(vaccines.map(v => v._id === selectedVaccine._id 
@@ -354,8 +352,8 @@ const Vaccinations = () => {
           const updated = await vaccineService.updateVaccine(selectedVaccine._id, formData);
           setVaccines(vaccines.map(v => v._id === selectedVaccine._id ? updated : v));
         }
+        showToast.success(`Vaccine ${formData.vaccineName} record updated!`);
       } else {
-        // Add flow
         if (offlineMode) {
           const matchedMember = familyMembers.find(m => m._id === formData.familyMember) || null;
           const mockNewVaccine = {
@@ -368,10 +366,12 @@ const Vaccinations = () => {
           const created = await vaccineService.createVaccine(formData);
           setVaccines([...vaccines, created]);
         }
+        showToast.success(`Vaccine ${formData.vaccineName} logged!`);
       }
       setIsModalOpen(false);
     } catch (err) {
       console.error('Failed to submit vaccine tracker form:', err);
+      showToast.error(err.response?.data?.message || 'Failed to save vaccine record.');
     } finally {
       setSubmitting(false);
     }
@@ -389,8 +389,10 @@ const Vaccinations = () => {
         await vaccineService.deleteVaccine(id);
         setVaccines(vaccines.filter(v => v._id !== id));
       }
+      showToast.success('Vaccine record removed.');
     } catch (err) {
       console.error('Failed to delete vaccine record:', err);
+      showToast.error('Failed to remove record.');
     }
   };
 
@@ -407,12 +409,13 @@ const Vaccinations = () => {
         const updated = await vaccineService.updateVaccine(vacc._id, updatedData);
         setVaccines(vaccines.map(v => v._id === vacc._id ? updated : v));
       }
+      showToast.success(`${vacc.vaccineName} marked as administered!`);
     } catch (err) {
       console.error('Failed to update vaccine completion status:', err);
+      showToast.error('Failed to update completion status.');
     }
   };
 
-  // Filter application
   const filteredVaccines = vaccines.filter(vacc => {
     const matchesStatus = statusFilter === 'All' || vacc.status === statusFilter;
     
@@ -428,7 +431,6 @@ const Vaccinations = () => {
 
     return matchesStatus && matchesMember;
   }).sort((a, b) => {
-    // Sort timeline: Overdue/Scheduled first by nextDueDate, then Administered by dateAdministered desc
     if (a.status !== 'Administered' && b.status === 'Administered') return -1;
     if (a.status === 'Administered' && b.status !== 'Administered') return 1;
     if (a.status !== 'Administered' && b.status !== 'Administered') {
@@ -441,53 +443,57 @@ const Vaccinations = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 size={32} className="animate-spin text-primary-500 mb-4" />
-        <p className="text-gray-400 text-sm">Loading vaccinations history...</p>
+      <div className="animate-fade-in space-y-6">
+        <div className="page-header">
+          <div className="w-48 h-7 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="w-72 h-4 bg-gray-100 rounded animate-pulse" />
+        </div>
+        <SkeletonLoader type="card" count={3} />
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in space-y-8">
+    <div className="animate-fade-in space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="page-header mb-0">
-          <h2 className="page-title text-gradient bg-gradient-to-r from-primary-400 to-secondary-400">
+          <h2 className="page-title text-gray-900 font-bold">
             Vaccination Tracker
           </h2>
-          <p className="page-subtitle">Log administered vaccines and track upcoming immunization due dates</p>
+          <p className="page-subtitle text-gray-500">Log administered vaccines and track upcoming immunization due dates</p>
         </div>
-        <button 
+        <Button 
+          variant="primary"
+          icon={Plus}
           onClick={handleOpenAddModal}
-          className="btn btn-primary btn-sm self-start sm:self-auto flex items-center gap-1.5"
+          className="self-start sm:self-auto"
         >
-          <Plus size={16} />
           Log Vaccine
-        </button>
+        </Button>
       </div>
 
       {/* Offline Alert Warning */}
       {error && (
-        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-4 py-2.5 rounded-xl text-sm animate-scale-in">
-          <AlertCircle size={16} />
+        <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-700 px-3.5 py-2.5 rounded-lg text-caption font-medium">
+          <AlertCircle size={16} className="text-gray-900" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Filters Bar */}
-      <div className="glass-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3" hoverable={false}>
         {/* Status Filter */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter size={14} className="text-gray-500" />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Filter size={14} className="text-gray-400" />
           {statuses.map(st => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all duration-200
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all
                 ${statusFilter === st 
-                  ? 'bg-primary-500 text-white' 
-                  : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'}`}
             >
               {st === 'All' ? 'All status' : st}
             </button>
@@ -498,7 +504,7 @@ const Vaccinations = () => {
         <div className="flex items-center gap-2">
           <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Patient:</label>
           <select 
-            className="form-select py-1.5 px-3 text-xs w-44 bg-white/5 border-white/10"
+            className="form-select py-1.5 px-3 text-caption w-44 bg-gray-50 border-gray-200"
             value={memberFilter}
             onChange={(e) => setMemberFilter(e.target.value)}
           >
@@ -509,131 +515,110 @@ const Vaccinations = () => {
             ))}
           </select>
         </div>
-      </div>
+      </Card>
 
       {/* Vaccine Timeline Layout UI */}
       {filteredVaccines.length === 0 ? (
-        <div className="empty-state">
-          <Syringe size={48} className="mx-auto mb-4 text-gray-600 animate-pulse" />
-          <h3 className="text-title text-gray-300 mb-2">No vaccination records found</h3>
-          <p className="text-body text-gray-500 max-w-sm mx-auto">
-            Try adjusting your search filters or log a new vaccination card.
-          </p>
-        </div>
+        <EmptyState
+          icon={Syringe}
+          title="No vaccination records found"
+          description="Try adjusting your search filters or log a new vaccination card."
+          actionText="Log Vaccine"
+          onAction={handleOpenAddModal}
+        />
       ) : (
-        <div className="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/10">
+        <div className="relative pl-6 sm:pl-8 space-y-5 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-200">
           {filteredVaccines.map(vacc => (
-            <div 
+            <Card 
               key={vacc._id} 
-              className="relative glass-card p-5 sm:p-6 animate-fade-in group flex flex-col md:flex-row md:items-center justify-between gap-4"
+              className="relative p-5 animate-fade-in group flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
               {/* Timeline dot */}
-              <span className={`absolute left-[-21px] sm:left-[-25px] top-7 w-3 h-3 rounded-full border-2 border-dark-app z-10
-                ${vacc.status === 'Administered' ? 'bg-secondary-500' : ''}
-                ${vacc.status === 'Scheduled' ? 'bg-amber-500' : ''}
-                ${vacc.status === 'Overdue' ? 'bg-red-500 shadow-glow-danger' : ''}
-              `} />
+              <span className="absolute left-[-21px] sm:left-[-25px] top-6 w-3.5 h-3.5 rounded-full border-2 border-white bg-black z-10" />
 
               {/* Left Column: Vaccine Metadata */}
-              <div className="space-y-3 flex-1">
+              <div className="space-y-2.5 flex-1">
                 <div className="flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5
-                    ${vacc.status === 'Administered' ? 'bg-secondary-500/10 text-secondary-400' : ''}
-                    ${vacc.status === 'Scheduled' ? 'bg-amber-500/10 text-amber-400' : ''}
-                    ${vacc.status === 'Overdue' ? 'bg-red-500/10 text-red-400' : ''}
-                  `}>
-                    <Syringe size={18} />
+                  <div className="w-9 h-9 rounded-lg bg-gray-100 text-gray-900 flex items-center justify-center flex-shrink-0 mt-0.5 border border-gray-200">
+                    <Syringe size={16} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-body font-bold text-white leading-tight">
+                      <h4 className="text-body font-bold text-gray-900 leading-tight">
                         {vacc.vaccineName}
                       </h4>
-                      <span className="text-[11px] text-gray-400 font-semibold px-2 py-0.5 bg-white/5 rounded-lg">
-                        Dose {vacc.doseNumber}
-                      </span>
-                      <span className={`badge text-[9px] py-0.5
-                        ${vacc.status === 'Administered' ? 'badge-success' : ''}
-                        ${vacc.status === 'Scheduled' ? 'badge-warning' : ''}
-                        ${vacc.status === 'Overdue' ? 'badge-danger animate-pulse-glow' : ''}
-                      `}>
+                      <Badge variant="secondary" className="text-[9px]">Dose #{vacc.doseNumber}</Badge>
+                      <Badge variant={vacc.status === 'Administered' ? 'success' : vacc.status === 'Overdue' ? 'danger' : 'warning'} className="text-[9px]">
                         {vacc.status}
-                      </span>
+                      </Badge>
                     </div>
-                    
-                    {/* Patient detail */}
-                    <p className="text-caption text-primary-400 font-medium mt-1">
-                      Patient: {vacc.familyMember ? `${vacc.familyMember.name} (${vacc.familyMember.relation})` : 'Self'}
+                    <p className="text-caption text-gray-500 mt-0.5 font-medium">
+                      Patient: <span className="text-gray-900 font-semibold">{vacc.familyMember ? vacc.familyMember.name : 'Self'}</span>
                     </p>
                   </div>
                 </div>
 
-                {/* Logistics */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-caption text-gray-400 pt-2 border-t border-white/5">
-                  {vacc.status === 'Administered' ? (
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={13} className="text-secondary-400" />
-                      <span>Administered: <strong>{new Date(vacc.dateAdministered).toLocaleDateString()}</strong></span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Clock size={13} className="text-amber-400" />
-                      <span>Next Due Date: <strong className={vacc.status === 'Overdue' ? 'text-red-400' : 'text-white'}>{new Date(vacc.nextDueDate).toLocaleDateString()}</strong></span>
-                    </div>
+                <div className="flex flex-wrap items-center gap-4 text-caption text-gray-600 pt-0.5">
+                  {vacc.dateAdministered && (
+                    <span className="flex items-center gap-1 text-gray-900 font-semibold">
+                      <CheckCircle2 size={13} />
+                      Administered: {new Date(vacc.dateAdministered).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  )}
+                  {vacc.nextDueDate && (
+                    <span className="flex items-center gap-1 text-gray-600">
+                      <Calendar size={13} />
+                      Next Due: {new Date(vacc.nextDueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
                   )}
                   {vacc.administeredBy && (
-                    <div className="flex items-center gap-2">
-                      <Building size={13} className="text-gray-500" />
-                      <span className="truncate">Clinic: <strong>{vacc.administeredBy}</strong></span>
-                    </div>
+                    <span className="flex items-center gap-1 text-gray-500">
+                      <Building size={13} />
+                      {vacc.administeredBy}
+                    </span>
                   )}
                 </div>
 
-                {/* Notes */}
                 {vacc.notes && (
-                  <p className="text-caption text-gray-500 italic bg-black/25 p-2.5 rounded-lg leading-snug">
+                  <p className="text-caption text-gray-600 italic bg-gray-50 p-2 rounded-lg border border-gray-100 leading-snug">
                     "{vacc.notes}"
                   </p>
                 )}
               </div>
 
-              {/* Right Column: Actions (Edit/Delete/Mark Completed) */}
-              <div className="flex items-center justify-between border-t md:border-t-0 border-white/5 pt-3 md:pt-0 gap-3">
-                {/* Complete Action Button */}
+              {/* Right Column: Actions */}
+              <div className="flex items-center gap-2 self-end md:self-center border-t md:border-t-0 border-gray-200 pt-2.5 md:pt-0 w-full md:w-auto justify-end">
                 {vacc.status !== 'Administered' && (
-                  <button
+                  <Button 
+                    variant="secondary"
+                    size="sm"
+                    icon={CheckCircle2}
                     onClick={() => handleMarkCompleted(vacc)}
-                    className="btn btn-secondary py-2 px-3 text-xs flex items-center gap-1"
                   >
-                    <CheckCircle2 size={12} />
-                    Mark Completed
-                  </button>
+                    Mark Given
+                  </Button>
                 )}
-
-                {/* Edit & Delete Controls */}
-                <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-200 ml-auto md:ml-0">
-                  <button 
-                    onClick={() => handleOpenEditModal(vacc)}
-                    className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
-                    title="Edit Record"
-                  >
-                    <Pencil size={11} />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteVaccine(vacc._id)}
-                    className="w-7 h-7 rounded-lg bg-white/5 hover:bg-red-500/10 flex items-center justify-center text-gray-400 hover:text-red-400 transition-all duration-200"
-                    title="Delete Record"
-                  >
-                    <Trash2 size={11} />
-                  </button>
-                </div>
+                <button 
+                  onClick={() => handleOpenEditModal(vacc)}
+                  className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
+                  title="Edit Record"
+                >
+                  <Pencil size={13} />
+                </button>
+                <button 
+                  onClick={() => handleDeleteVaccine(vacc._id)}
+                  className="w-7 h-7 rounded-md hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
+                  title="Delete Record"
+                >
+                  <Trash2 size={13} />
+                </button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
 
-      {/* Vaccine Form Modal */}
+      {/* Vaccine Modal */}
       <VaccineModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

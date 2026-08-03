@@ -2,75 +2,47 @@ import React from 'react';
 import { Calendar, User, FileText, Trash2, Heart } from 'lucide-react';
 
 const RecordCard = ({ record, onDelete }) => {
-  const getBadgeStyle = (type) => {
-    switch (type) {
-      case 'Prescription':
-        return { background: 'rgba(99, 102, 241, 0.15)', color: 'hsl(222, 89%, 65%)' };
-      case 'Lab Report':
-        return { background: 'rgba(16, 185, 129, 0.15)', color: 'hsl(160, 84%, 45%)' };
-      case 'Vaccine Certificate':
-        return { background: 'rgba(245, 158, 11, 0.15)', color: 'rgb(245, 158, 11)' };
-      default:
-        return { background: 'rgba(107, 114, 128, 0.15)', color: 'var(--text-secondary)' };
-    }
-  };
-
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <span 
-          style={{ 
-            padding: '0.25rem 0.75rem', 
-            borderRadius: 'var(--radius-full)', 
-            fontSize: '0.75rem', 
-            fontWeight: '600',
-            ...getBadgeStyle(record.recordType)
-          }}
-        >
+    <div className="glass-panel p-5 flex flex-col justify-between space-y-4 animate-fade-in">
+      <div className="flex justify-between items-start">
+        <span className="badge badge-secondary">
           {record.recordType}
         </span>
         
         {onDelete && (
           <button 
             onClick={() => onDelete(record._id)} 
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              color: 'var(--text-muted)', 
-              cursor: 'pointer',
-              transition: 'color var(--transition-fast)'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#ef4444'}
-            onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
+            className="w-7 h-7 rounded-md hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
+            title="Delete Record"
           >
-            <Trash2 size={16} />
+            <Trash2 size={15} />
           </button>
         )}
       </div>
 
       <div>
-        <h4 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{record.title}</h4>
+        <h4 className="text-body font-bold text-gray-900 mb-1">{record.title}</h4>
         {record.doctor && (
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            <Heart size={12} style={{ color: 'var(--primary)' }} />
+          <p className="text-caption text-gray-500 flex items-center gap-1">
+            <Heart size={12} className="text-gray-700" />
             Dr. {record.doctor}
           </p>
         )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <User size={14} />
-          <span>Patient: <strong>{record.patientName}</strong></span>
+      <div className="flex flex-col gap-1.5 text-caption text-gray-600 border-t border-gray-100 pt-3">
+        <div className="flex items-center gap-1.5">
+          <User size={13} className="text-gray-400" />
+          <span>Patient: <strong className="text-gray-900">{record.patientName}</strong></span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Calendar size={14} />
+        <div className="flex items-center gap-1.5">
+          <Calendar size={13} className="text-gray-400" />
           <span>Date: {new Date(record.dateOfRecord).toLocaleDateString()}</span>
         </div>
       </div>
 
       {record.notes && (
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', background: 'rgba(0,0,0,0.15)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
+        <p className="text-caption text-gray-600 italic bg-gray-50 p-2.5 rounded-lg border border-gray-100">
           "{record.notes}"
         </p>
       )}

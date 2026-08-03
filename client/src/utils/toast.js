@@ -1,51 +1,74 @@
 import { toast } from 'react-hot-toast';
 
-// Custom dark mode theme configurations for react-hot-toast
+// Minimal light-mode monochrome theme for react-hot-toast
 const toastStyle = {
   style: {
-    background: '#111827',
-    color: '#f9fafb',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    background: '#ffffff',
+    color: '#111827',
+    border: '1px solid #e5e7eb',
     borderRadius: '12px',
     fontSize: '14px',
+    fontWeight: '500',
     fontFamily: 'Inter, system-ui, sans-serif',
-    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+    boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.08)',
     padding: '12px 16px',
+    maxWidth: '420px',
   },
   success: {
+    duration: 3500,
     iconTheme: {
-      primary: '#10b981', // emerald-500
-      secondary: '#111827',
+      primary: '#111827', // Crisp black checkmark
+      secondary: '#ffffff',
     },
   },
   error: {
+    duration: 4500,
     iconTheme: {
-      primary: '#ef4444', // red-500
-      secondary: '#111827',
+      primary: '#dc2626', // Red indicator for error
+      secondary: '#ffffff',
     },
   },
 };
 
 export const showToast = {
   success: (message) => {
-    toast.success(message, {
+    return toast.success(message, {
       ...toastStyle,
       ...toastStyle.success,
     });
   },
 
   error: (message) => {
-    toast.error(message, {
+    return toast.error(message, {
       ...toastStyle,
       ...toastStyle.error,
     });
   },
 
   info: (message) => {
-    toast(message, {
+    return toast(message, {
       ...toastStyle,
       icon: 'ℹ️',
+      duration: 3500,
     });
+  },
+
+  warning: (message) => {
+    return toast(message, {
+      ...toastStyle,
+      icon: '⚠️',
+      duration: 4000,
+    });
+  },
+
+  loading: (message) => {
+    return toast.loading(message || 'Processing...', {
+      ...toastStyle,
+    });
+  },
+
+  dismiss: (toastId) => {
+    toast.dismiss(toastId);
   },
 
   promise: (promise, { loading, success, error }) => {
@@ -54,7 +77,7 @@ export const showToast = {
       {
         loading: loading || 'Loading...',
         success: success || 'Success!',
-        error: (err) => error || err.message || 'An error occurred',
+        error: (err) => (typeof error === 'function' ? error(err) : error || err?.message || 'An error occurred'),
       },
       {
         style: toastStyle.style,

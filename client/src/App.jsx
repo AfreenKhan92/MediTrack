@@ -9,7 +9,19 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
-        <Toaster position="top-right" reverseOrder={false} />
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+          gutter={10}
+          containerStyle={{
+            top: 20,
+            right: 20,
+            zIndex: 99999,
+          }}
+          toastOptions={{
+            className: 'animate-scale-in',
+          }}
+        />
       </AuthProvider>
     </BrowserRouter>
   );

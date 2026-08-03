@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ================================================================
-   BASE LAYER — Global Resets & Defaults
+   BASE LAYER — White & Blue Healthcare Theme Defaults
    ================================================================ */
 @layer base {
   *,
@@ -13,49 +13,48 @@
   }
 
   html {
-    @apply scroll-smooth;
+    @apply scroll-smooth bg-white text-gray-900;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-dark-app text-gray-50 font-sans min-h-screen leading-relaxed;
-    @apply antialiased selection:bg-primary-500/30 selection:text-white;
+    @apply bg-white text-gray-900 font-sans min-h-screen leading-relaxed antialiased selection:bg-blue-600 selection:text-white;
     overflow-x: hidden;
   }
 
-  /* Headings use Outfit font by default */
+  /* Typography Hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight;
+    @apply font-heading tracking-tight text-gray-900;
   }
 
-  h1 { @apply text-display; }
-  h2 { @apply text-headline; }
-  h3 { @apply text-title; }
-  h4 { @apply text-subtitle; }
+  h1 { @apply text-display font-bold; }
+  h2 { @apply text-headline font-bold; }
+  h3 { @apply text-title font-semibold; }
+  h4 { @apply text-subtitle font-medium; }
 
   /* Links */
   a {
-    @apply text-inherit no-underline transition-colors duration-200;
+    @apply text-inherit no-underline transition-colors duration-150;
   }
 
-  /* Custom Scrollbar */
+  /* Clean Minimal Scrollbar */
   ::-webkit-scrollbar {
     @apply w-1.5 h-1.5;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-dark-app;
+    @apply bg-white;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-white/10 rounded-full;
+    @apply bg-blue-100 rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-white/20;
+    @apply bg-blue-200;
   }
 }
 
 /* ================================================================
-   COMPONENT LAYER — Reusable UI Patterns
+   COMPONENT LAYER — Modern White & Blue UI Controls
    ================================================================ */
 @layer components {
 
@@ -64,114 +63,94 @@
     @apply w-full max-w-dashboard mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* ── Glassmorphic Surfaces ───────────────────────── */
+  /* ── Clean White Cards & Panels (rounded-2xl) ──────── */
   .glass-panel {
-    background: rgba(17, 24, 39, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    @apply border border-dark-border rounded-2xl shadow-glass
-           transition-all duration-300 ease-out-expo;
+    @apply bg-white border border-gray-200 rounded-2xl shadow-sm
+           transition-all duration-200 ease-out;
   }
 
   .glass-panel:hover {
-    @apply border-white/[0.15];
+    @apply border-gray-300 shadow-md;
   }
 
   .glass-card {
-    @apply glass-panel p-6;
+    @apply glass-panel p-5 sm:p-6;
   }
 
-  /* ── Ambient Background ──────────────────────────── */
-  .gradient-bg {
-    @apply absolute inset-0 -z-10 overflow-hidden pointer-events-none;
-    background:
-      radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-      radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 45%);
-  }
-
-  /* ── Buttons ─────────────────────────────────────── */
+  /* ── Buttons (White & Blue Healthcare System) ─────── */
   .btn {
     @apply inline-flex items-center justify-center gap-2
-           px-6 py-3 font-heading font-medium text-sm
+           px-4 py-2.5 font-sans font-medium text-body
            rounded-xl border border-transparent
            cursor-pointer select-none
-           transition-all duration-200 ease-out-expo
-           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-app
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none;
+           transition-all duration-150 ease-out
+           focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-opacity-100;
   }
 
   .btn-sm {
-    @apply px-4 py-2 text-caption rounded-lg;
+    @apply px-3 py-1.5 text-caption rounded-lg;
   }
 
   .btn-lg {
-    @apply px-8 py-4 text-body rounded-2xl;
+    @apply px-6 py-3 text-subtitle rounded-2xl;
   }
 
+  /* Primary Button: Core Blue Background (#2563EB) */
   .btn-primary {
-    @apply bg-primary-600 text-white
-           shadow-lg shadow-primary-600/30
-           hover:bg-primary-500 hover:-translate-y-0.5 hover:shadow-primary-500/40
-           focus:ring-primary-500;
+    @apply bg-blue-600 text-white border-blue-600
+           hover:bg-blue-700 hover:border-blue-700
+           active:bg-blue-800 shadow-sm;
   }
 
-  .btn-secondary {
-    @apply bg-secondary-600 text-white
-           shadow-lg shadow-secondary-600/30
-           hover:bg-secondary-500 hover:-translate-y-0.5 hover:shadow-secondary-500/40
-           focus:ring-secondary-500;
-  }
-
+  /* Secondary Button: White Background with Blue Border & Text */
+  .btn-secondary,
   .btn-outline {
-    @apply bg-transparent border-white/10 text-white
-           hover:bg-white/5 hover:border-white/20
-           focus:ring-white/20;
+    @apply bg-white text-blue-600 border-blue-600
+           hover:bg-blue-50 hover:border-blue-700 hover:text-blue-700
+           active:bg-blue-100 shadow-sm;
   }
 
+  /* Danger Button: Red Background for Delete/Cancel Actions */
   .btn-danger {
-    @apply bg-red-600 text-white
-           shadow-lg shadow-red-600/30
-           hover:bg-red-500 hover:-translate-y-0.5 hover:shadow-red-500/40
-           focus:ring-red-500;
+    @apply bg-red-600 text-white border-red-600
+           hover:bg-red-700 hover:border-red-700
+           active:bg-red-800;
   }
 
+  /* Ghost Button: Transparent with Light Blue Hover */
   .btn-ghost {
-    @apply bg-transparent text-gray-400
-           hover:text-white hover:bg-white/5
-           focus:ring-white/10;
+    @apply bg-transparent text-gray-700 border-transparent
+           hover:text-blue-600 hover:bg-blue-50;
   }
 
-  /* ── Form Controls ───────────────────────────────── */
+  /* ── Form Controls (Modern White & Blue Focus) ────────── */
   .form-group {
-    @apply mb-5;
+    @apply mb-4;
   }
 
   .form-label {
-    @apply block text-overline text-gray-400 mb-2 uppercase;
+    @apply block text-caption font-semibold text-gray-700 mb-1.5 uppercase tracking-wider;
   }
 
   .form-input {
-    @apply w-full px-4 py-3
-           bg-black/20 border border-white/10 rounded-xl
-           text-white text-body placeholder-gray-500
-           transition-all duration-200
-           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30;
+    @apply w-full px-3.5 py-2.5
+           bg-slate-50/70 border border-gray-200 rounded-xl
+           text-gray-900 text-body placeholder-gray-400
+           transition-all duration-150
+           focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20;
   }
 
   .form-select {
     @apply form-input appearance-none cursor-pointer pr-10;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%239ca3af'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%232563EB'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z'/%3E%3C/svg%3E");
     background-size: 1.25rem;
     background-position: right 0.75rem center;
     background-repeat: no-repeat;
   }
 
   .form-textarea {
-    @apply form-input resize-none min-h-[100px];
-  }
-
-  .form-error {
-    @apply text-red-400 text-caption mt-1.5 flex items-center gap-1;
+    @apply form-input resize-none min-h-[90px];
   }
 
   /* ── Stats / Metric Cards ────────────────────────── */
@@ -180,90 +159,58 @@
   }
 
   .stat-icon {
-    @apply p-3 rounded-xl;
+    @apply p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100;
   }
 
   .stat-label {
-    @apply text-caption text-gray-400;
+    @apply text-caption font-medium text-gray-500;
   }
 
   .stat-value {
-    @apply text-headline text-white font-heading;
+    @apply text-headline text-gray-900 font-bold;
   }
 
-  /* ── Badges & Status Chips ───────────────────────── */
+  /* ── Badges & Status Chips (Clean Healthcare Scale) ── */
   .badge {
-    @apply inline-flex items-center px-3 py-1
-           rounded-full text-overline font-semibold uppercase;
+    @apply inline-flex items-center px-2.5 py-0.5
+           rounded-md text-caption font-semibold tracking-wide uppercase;
   }
 
-  .badge-primary  { @apply bg-primary-500/15 text-primary-400; }
-  .badge-success  { @apply bg-secondary-500/15 text-secondary-400; }
-  .badge-warning  { @apply bg-amber-500/15 text-amber-400; }
-  .badge-danger   { @apply bg-red-500/15 text-red-400; }
-  .badge-info     { @apply bg-blue-500/15 text-blue-400; }
-
-  /* ── Health Status Indicators ────────────────────── */
-  .health-dot {
-    @apply w-2.5 h-2.5 rounded-full inline-block;
-  }
-  .health-dot-critical { @apply health-dot bg-red-500 shadow-glow-danger; }
-  .health-dot-warning  { @apply health-dot bg-amber-500; }
-  .health-dot-stable   { @apply health-dot bg-secondary-500 shadow-glow-success; }
+  .badge-primary  { @apply bg-blue-50 text-blue-700 border border-blue-200; }
+  .badge-secondary{ @apply bg-gray-100 text-gray-800 border border-gray-200; }
+  .badge-success  { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
+  .badge-warning  { @apply bg-amber-50 text-amber-700 border border-amber-200; }
+  .badge-danger   { @apply bg-red-50 text-red-700 border border-red-200; }
+  .badge-info     { @apply bg-blue-50 text-blue-700 border border-blue-200; }
 
   /* ── Page Section Headers ────────────────────────── */
   .page-header {
-    @apply mb-8;
+    @apply mb-6;
   }
 
   .page-title {
-    @apply text-headline text-white font-heading mb-1;
+    @apply text-headline text-gray-900 font-bold mb-1;
   }
 
   .page-subtitle {
-    @apply text-body text-gray-400;
+    @apply text-body text-gray-500;
   }
 
   /* ── Empty State ─────────────────────────────────── */
   .empty-state {
-    @apply glass-panel py-16 px-8 text-center text-gray-400;
+    @apply glass-panel py-12 px-6 text-center text-gray-500 bg-slate-50/50 border border-dashed border-gray-200;
   }
 
-  /* ── Responsive Grid Helpers ─────────────────────── */
+  /* ── Responsive Grids ────────────────────────────── */
   .grid-cards {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5;
   }
 
   .grid-stats {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5;
   }
 
   .grid-dashboard {
-    @apply grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-8 items-start;
-  }
-}
-
-/* ================================================================
-   UTILITY LAYER — One-Off Helpers
-   ================================================================ */
-@layer utilities {
-
-  /* Staggered animation delays for list items */
-  .delay-100 { animation-delay: 100ms; }
-  .delay-200 { animation-delay: 200ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-400 { animation-delay: 400ms; }
-  .delay-500 { animation-delay: 500ms; }
-
-  /* Gradient text utility */
-  .text-gradient {
-    @apply bg-clip-text text-transparent
-           bg-gradient-to-r from-primary-400 to-secondary-400;
-  }
-
-  /* Shimmer loading skeleton */
-  .skeleton {
-    @apply bg-gradient-to-r from-dark-surface via-dark-hover to-dark-surface
-           bg-[length:200%_100%] animate-shimmer rounded-lg;
+    @apply grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start;
   }
 }
