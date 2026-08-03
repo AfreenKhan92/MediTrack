@@ -10,6 +10,8 @@ import familyRoutes from './routes/familyRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 import reminderRoutes from './routes/reminderRoutes.js';
 import vaccinationRoutes from './routes/vaccinationRoutes.js';
+import emergencyContactRoutes from './routes/emergencyContactRoutes.js';
+import timelineRoutes from './routes/timelineRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 // Load environment variables
@@ -36,6 +38,8 @@ app.use('/api/family', familyRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/vaccinations', vaccinationRoutes);
+app.use('/api/emergency-contacts', emergencyContactRoutes);
+app.use('/api/timeline', timelineRoutes);
 
 // Root route
 app.get('/', (req, res) => {

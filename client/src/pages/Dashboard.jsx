@@ -23,7 +23,7 @@ import appointmentService from '../services/appointmentService';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 import StatsCard from '../components/StatsCard';
-import RecentActivity from '../components/RecentActivity';
+import RecentTimeline from '../components/RecentTimeline';
 import SectionHeader from '../components/SectionHeader';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
@@ -365,8 +365,8 @@ const Dashboard = () => {
 
         {/* Right Column: Recent Activity & Vaccines */}
         <div className="space-y-6">
-          {/* Recent Activity Section */}
-          <RecentActivity />
+          {/* Recent Health Timeline */}
+          <RecentTimeline />
 
           {/* Vaccination Alerts */}
           <Card className="space-y-4">

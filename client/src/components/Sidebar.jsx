@@ -11,6 +11,7 @@ import {
   Activity,
   ChevronLeft,
   ChevronRight,
+  PhoneCall,
 } from 'lucide-react';
 
 const navItems = [
@@ -19,8 +20,10 @@ const navItems = [
   { path: '/reports',       label: 'Reports',        icon: FileText },
   { path: '/appointments',  label: 'Appointments',   icon: CalendarDays },
   { path: '/reminders',     label: 'Reminders',      icon: Bell },
-  { path: '/vaccines',      label: 'Vaccines',       icon: Syringe },
-  { path: '/profile',       label: 'Profile',        icon: UserCircle },
+  { path: '/vaccines',           label: 'Vaccines',            icon: Syringe },
+  { path: '/timeline',           label: 'Health Timeline',     icon: Activity },
+  { path: '/emergency-contacts', label: 'Emergency Contacts',  icon: PhoneCall },
+  { path: '/profile',            label: 'Profile',             icon: UserCircle },
 ];
 
 const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {

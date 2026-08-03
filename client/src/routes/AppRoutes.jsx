@@ -17,6 +17,8 @@ import Appointments from '../pages/Appointments';
 import Reminders from '../pages/Reminders';
 import Vaccinations from '../pages/Vaccinations';
 import Profile from '../pages/Profile';
+import EmergencyContacts from '../pages/EmergencyContacts';
+import HealthTimeline from '../pages/HealthTimeline';
 
 // Auth guard wrapper
 const PrivateRoute = ({ children }) => {
@@ -61,6 +63,8 @@ const AppRoutes = () => {
         <Route path="/appointments" element={<Appointments />} />
         <Route path="/reminders" element={<Reminders />} />
         <Route path="/vaccines" element={<Vaccinations />} />
+        <Route path="/emergency-contacts" element={<EmergencyContacts />} />
+        <Route path="/timeline" element={<HealthTimeline />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
 
