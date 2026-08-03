@@ -8,6 +8,8 @@ import recordRoutes from './routes/recordRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import familyRoutes from './routes/familyRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
+import reminderRoutes from './routes/reminderRoutes.js';
+import vaccinationRoutes from './routes/vaccinationRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 // Load environment variables
@@ -32,6 +34,8 @@ app.use('/api/records', recordRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/family', familyRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/reminders', reminderRoutes);
+app.use('/api/vaccinations', vaccinationRoutes);
 
 // Root route
 app.get('/', (req, res) => {
