@@ -1,15 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  FileText, 
-  Upload, 
-  Search, 
-  Trash2, 
-  Eye, 
-  X, 
-  AlertCircle, 
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  FileText,
+  Upload,
+  Search,
+  Trash2,
+  Eye,
+  X,
+  AlertCircle,
   FileImage,
-  Loader2, 
-  Filter
+  Loader2,
+  Filter,
+  CheckCircle2,
+  Scan,
+  Brain,
+  Sparkles,
 } from 'lucide-react';
 import reportService from '../services/reportService';
 import { showToast } from '../utils/toast';
@@ -18,72 +22,91 @@ import EmptyState from '../components/EmptyState';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
+import ReportPreview from '../components/ReportPreview';
 
-// File Preview Modal Component
-const PreviewModal = ({ isOpen, onClose, report }) => {
-  if (!isOpen || !report) return null;
+// ── Upload Progress Banner ──────────────────────────────────────────────────
+const UPLOAD_STAGES = [
+  { key: 'uploading', label: 'Uploading file…', icon: Upload, color: 'text-blue-600' },
+  { key: 'ocr', label: 'Extracting text with OCR…', icon: Scan, color: 'text-blue-600' },
+  { key: 'ai', label: 'Analyzing with Gemini AI…', icon: Brain, color: 'text-violet-600' },
+  { key: 'done', label: 'Analysis complete!', icon: Sparkles, color: 'text-emerald-600' },
+];
 
-  const isPDF = report.fileUrl.toLowerCase().endsWith('.pdf') || report.title.toLowerCase().endsWith('.pdf');
+const UploadProgressBanner = ({ stage }) => {
+  if (!stage) return null;
+
+  const currentStage = UPLOAD_STAGES.find((s) => s.key === stage);
+  if (!currentStage) return null;
+
+  const StageIcon = currentStage.icon;
+  const isDone = stage === 'done';
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div 
-        className="bg-white border border-gray-200 shadow-xl rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col p-6 animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
-          <div>
-            <h3 className="text-subtitle font-bold text-gray-900">{report.title}</h3>
-            <p className="text-caption text-gray-500 mt-0.5">Patient: {report.patientName} • Category: {report.category}</p>
-          </div>
-          <button 
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
+    <div
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-300
+        ${isDone
+          ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+          : 'bg-blue-50 border-blue-200 text-blue-700'
+        }`}
+    >
+      {isDone ? (
+        <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+      ) : (
+        <Loader2 size={16} className="animate-spin flex-shrink-0 text-blue-500" />
+      )}
+      <span>{currentStage.label}</span>
 
-        {/* Modal Content */}
-        <div className="flex-1 overflow-auto flex items-center justify-center bg-gray-50 rounded-xl min-h-[300px] p-4 border border-gray-200">
-          {isPDF ? (
-            <div className="text-center p-8 space-y-3">
-              <FileText size={48} className="text-gray-900 mx-auto" />
-              <p className="text-gray-900 font-bold">PDF Document Preview</p>
-              <p className="text-caption text-gray-500 max-w-sm mx-auto">
-                Direct browser PDF rendering is dependent on client compatibility. You can view or download the file directly:
-              </p>
-              <a 
-                href={report.fileUrl} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-              >
-                <Button variant="primary" size="sm" icon={Eye}>
-                  Open PDF in New Tab
-                </Button>
-              </a>
-            </div>
-          ) : (
-            <img 
-              src={report.fileUrl} 
-              alt={report.title} 
-              className="max-w-full max-h-[60vh] object-contain rounded-lg border border-gray-200 shadow-sm"
+      {/* Step dots */}
+      <div className="flex gap-1.5 ml-auto">
+        {UPLOAD_STAGES.map((s, i) => {
+          const currentIdx = UPLOAD_STAGES.findIndex((st) => st.key === stage);
+          const isActive = i === currentIdx;
+          const isPast = i < currentIdx;
+          return (
+            <div
+              key={s.key}
+              className={`w-1.5 h-1.5 rounded-full transition-all
+                ${isPast ? 'bg-emerald-400' : isActive ? 'bg-blue-500 animate-pulse' : 'bg-gray-200'}`}
             />
-          )}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
 };
 
-// Main Reports Component
+// ── Processing Status Micro-Badge (shown on report cards) ──────────────────
+const ProcessingBadge = ({ processingStatus }) => {
+  if (!processingStatus || processingStatus === 'completed') return null;
+
+  const config = {
+    pending: { label: 'Queued', variant: 'secondary' },
+    ocr_processing: { label: 'OCR…', variant: 'info' },
+    ai_processing: { label: 'AI…', variant: 'info' },
+    failed: { label: 'Failed', variant: 'danger' },
+  };
+
+  const c = config[processingStatus];
+  if (!c) return null;
+
+  return (
+    <Badge variant={c.variant} className="text-[9px] py-0 flex items-center gap-1">
+      {['ocr_processing', 'ai_processing', 'pending'].includes(processingStatus) && (
+        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse inline-block" />
+      )}
+      {c.label}
+    </Badge>
+  );
+};
+
+// ── Main Reports Component ──────────────────────────────────────────────────
 const Reports = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [offlineMode, setOfflineMode] = useState(false);
+  const [uploadStage, setUploadStage] = useState(null); // null | 'uploading' | 'ocr' | 'ai' | 'done'
 
   // Search & Filtering State
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,6 +127,8 @@ const Reports = () => {
   const [formValidationError, setFormValidationError] = useState('');
 
   const fileInputRef = useRef(null);
+  // Track active polling cleanups keyed by report _id
+  const pollingCleanups = useRef({});
 
   const mockReports = [
     {
@@ -115,7 +140,9 @@ const Reports = () => {
       fileUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80',
       cloudinaryId: 'm1',
       notes: 'Total cholesterol levels are within range. HDL is optimal.',
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      processingStatus: 'completed',
+      ocrStatus: 'success',
     },
     {
       _id: 'mock2',
@@ -126,7 +153,9 @@ const Reports = () => {
       fileUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
       cloudinaryId: 'm2',
       notes: 'Take 3 times daily for throat infection.',
-      date: new Date(Date.now() - 24 * 60 * 60 * 1000 * 5).toISOString()
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000 * 5).toISOString(),
+      processingStatus: 'completed',
+      ocrStatus: 'success',
     },
     {
       _id: 'mock3',
@@ -137,8 +166,10 @@ const Reports = () => {
       fileUrl: 'dummy.pdf',
       cloudinaryId: 'm3',
       notes: 'Immunization complete.',
-      date: new Date(Date.now() - 24 * 60 * 60 * 1000 * 20).toISOString()
-    }
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000 * 20).toISOString(),
+      processingStatus: 'pending',
+      ocrStatus: 'pending',
+    },
   ];
 
   const fetchReports = async () => {
@@ -160,14 +191,56 @@ const Reports = () => {
 
   useEffect(() => {
     fetchReports();
+    // Cleanup all polls on unmount
+    return () => {
+      Object.values(pollingCleanups.current).forEach((cleanup) => {
+        if (typeof cleanup === 'function') cleanup();
+      });
+    };
+  }, []);
+
+  // ── Start background polling for a freshly uploaded report ────────────────
+  const startPollingForReport = useCallback((reportId) => {
+    if (pollingCleanups.current[reportId]) return; // Already polling
+
+    const cleanup = reportService.pollReport(
+      reportId,
+      (updatedReport) => {
+        // Update reports list
+        setReports((prev) =>
+          prev.map((r) => (r._id === updatedReport._id ? updatedReport : r))
+        );
+        // Update open preview if it's this report
+        setPreviewReport((prev) =>
+          prev?._id === updatedReport._id ? updatedReport : prev
+        );
+
+        // Update upload stage banner
+        if (updatedReport.processingStatus === 'ocr_processing') {
+          setUploadStage('ocr');
+        } else if (updatedReport.processingStatus === 'ai_processing') {
+          setUploadStage('ai');
+        } else if (updatedReport.processingStatus === 'completed') {
+          setUploadStage('done');
+          setTimeout(() => setUploadStage(null), 3000);
+          delete pollingCleanups.current[reportId];
+        } else if (updatedReport.processingStatus === 'failed') {
+          setUploadStage(null);
+          delete pollingCleanups.current[reportId];
+        }
+      },
+      3000
+    );
+
+    pollingCleanups.current[reportId] = cleanup;
   }, []);
 
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   };
@@ -176,7 +249,6 @@ const Reports = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelection(e.dataTransfer.files[0]);
     }
@@ -191,7 +263,7 @@ const Reports = () => {
   const handleFileSelection = (selectedFile) => {
     const fileType = selectedFile.type;
     const isAllowed = /pdf|png|jpeg|jpg/i.test(fileType) || /pdf|png|jpeg|jpg/i.test(selectedFile.name);
-    
+
     if (!isAllowed) {
       setFormValidationError('Only PDF, PNG, JPG, and JPEG file types are supported.');
       setFile(null);
@@ -206,9 +278,9 @@ const Reports = () => {
 
     setFile(selectedFile);
     setFormValidationError('');
-    
+
     if (!title) {
-      const baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
+      const baseName = selectedFile.name.replace(/\.[^/.]+$/, '');
       setTitle(baseName);
     }
   };
@@ -223,6 +295,7 @@ const Reports = () => {
     }
 
     setSubmitting(true);
+    setUploadStage('uploading');
 
     const formData = new FormData();
     formData.append('file', file);
@@ -234,7 +307,7 @@ const Reports = () => {
 
     try {
       if (offlineMode) {
-        const localMockUrl = file.type.includes('pdf') 
+        const localMockUrl = file.type.includes('pdf')
           ? 'sample_document.pdf'
           : URL.createObjectURL(file);
 
@@ -246,22 +319,29 @@ const Reports = () => {
           doctor,
           notes,
           fileUrl: localMockUrl,
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          processingStatus: 'pending',
+          ocrStatus: 'pending',
         };
 
         setReports([newReport, ...reports]);
         showToast.success(`Report "${title}" uploaded successfully!`);
+        setUploadStage(null);
         resetForm();
       } else {
         const uploadedReport = await reportService.uploadReport(formData);
-        setReports([uploadedReport, ...reports]);
-        showToast.success(`Report "${title}" uploaded successfully!`);
+        setReports((prev) => [uploadedReport, ...prev]);
+        showToast.success(`Report "${title}" uploaded! AI analysis is running in the background.`);
         resetForm();
+
+        // Start background polling for this new report
+        startPollingForReport(uploadedReport._id);
       }
     } catch (err) {
       const errorMsg = err.message || 'File upload failed';
       setFormValidationError(errorMsg);
       showToast.error(errorMsg);
+      setUploadStage(null);
     } finally {
       setSubmitting(false);
     }
@@ -286,11 +366,17 @@ const Reports = () => {
     }
 
     try {
+      // Stop polling if active
+      if (pollingCleanups.current[id]) {
+        pollingCleanups.current[id]();
+        delete pollingCleanups.current[id];
+      }
+
       if (id.startsWith('mock') || id.startsWith('local_')) {
-        setReports(reports.filter(r => r._id !== id));
+        setReports(reports.filter((r) => r._id !== id));
       } else {
         await reportService.deleteReport(id);
-        setReports(reports.filter(r => r._id !== id));
+        setReports(reports.filter((r) => r._id !== id));
       }
       showToast.success('Report deleted.');
     } catch (err) {
@@ -304,12 +390,19 @@ const Reports = () => {
     setIsPreviewOpen(true);
   };
 
-  const filteredReports = reports.filter(report => {
-    const matchesSearch = 
+  // Callback to sync report updates from the preview modal back to the list
+  const handleReportUpdate = useCallback((updatedReport) => {
+    setReports((prev) =>
+      prev.map((r) => (r._id === updatedReport._id ? updatedReport : r))
+    );
+  }, []);
+
+  const filteredReports = reports.filter((report) => {
+    const matchesSearch =
       report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       report.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (report.doctor && report.doctor.toLowerCase().includes(searchQuery.toLowerCase()));
-      
+
     const matchesCategory = selectedCategory === 'All' || report.category === selectedCategory;
 
     return matchesSearch && matchesCategory;
@@ -336,7 +429,9 @@ const Reports = () => {
         <h2 className="page-title text-gray-900 font-bold">
           Medical Reports & Prescriptions
         </h2>
-        <p className="page-subtitle text-gray-500">Securely store, organize, and preview your family clinical records</p>
+        <p className="page-subtitle text-gray-500">
+          Securely store, organize, and AI-analyze your family clinical records
+        </p>
       </div>
 
       {/* Offline Alert */}
@@ -347,9 +442,12 @@ const Reports = () => {
         </div>
       )}
 
+      {/* Upload Stage Progress Banner */}
+      <UploadProgressBanner stage={uploadStage} />
+
       {/* Primary Layout Area */}
       <div className="grid-dashboard">
-        
+
         {/* Left Side: Upload Form Panel */}
         <Card className="space-y-4">
           <h3 className="text-subtitle font-bold text-gray-900 mb-2 flex items-center gap-2">
@@ -357,9 +455,17 @@ const Reports = () => {
             Upload Document
           </h3>
 
+          {/* AI Feature Callout */}
+          <div className="flex items-start gap-2.5 bg-gradient-to-r from-blue-50 to-violet-50 border border-blue-100 rounded-xl p-3">
+            <Sparkles size={14} className="text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] text-blue-700 leading-snug font-medium">
+              After upload, AI will automatically extract medicine names, dosages, test results, and generate a plain-language summary.
+            </p>
+          </div>
+
           <form onSubmit={handleUploadSubmit} className="space-y-3.5">
             {/* Drag & Drop zone */}
-            <div 
+            <div
               className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all duration-150 flex flex-col items-center justify-center min-h-[130px]
                 ${dragActive ? 'border-black bg-gray-100' : 'border-gray-300 hover:border-gray-400 bg-gray-50/70'}
                 ${file ? 'border-black bg-gray-100/50' : ''}`}
@@ -369,10 +475,10 @@ const Reports = () => {
               onDrop={handleDrop}
               onClick={() => fileInputRef.current.click()}
             >
-              <input 
-                type="file" 
+              <input
+                type="file"
                 ref={fileInputRef}
-                className="hidden" 
+                className="hidden"
                 onChange={handleFileInputChange}
                 accept=".pdf,.png,.jpg,.jpeg"
               />
@@ -411,9 +517,9 @@ const Reports = () => {
             {/* Title field */}
             <div className="form-group mb-0">
               <label className="form-label">Document Title</label>
-              <input 
-                type="text" 
-                className="form-input" 
+              <input
+                type="text"
+                className="form-input"
                 placeholder="e.g. Chest X-Ray Report"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -425,9 +531,9 @@ const Reports = () => {
             {/* Patient Name field */}
             <div className="form-group mb-0">
               <label className="form-label">Patient Name</label>
-              <input 
-                type="text" 
-                className="form-input" 
+              <input
+                type="text"
+                className="form-input"
                 placeholder="e.g. Self, Leo Doe"
                 value={patientName}
                 onChange={(e) => setPatientName(e.target.value)}
@@ -439,7 +545,7 @@ const Reports = () => {
             {/* Category Select */}
             <div className="form-group mb-0">
               <label className="form-label">Category</label>
-              <select 
+              <select
                 className="form-select"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -455,9 +561,9 @@ const Reports = () => {
             {/* Doctor field */}
             <div className="form-group mb-0">
               <label className="form-label">Doctor / Clinic (Optional)</label>
-              <input 
-                type="text" 
-                className="form-input" 
+              <input
+                type="text"
+                className="form-input"
                 placeholder="Dr. Sarah Jenkins"
                 value={doctor}
                 onChange={(e) => setDoctor(e.target.value)}
@@ -468,8 +574,8 @@ const Reports = () => {
             {/* Notes field */}
             <div className="form-group mb-0">
               <label className="form-label">Notes (Optional)</label>
-              <textarea 
-                className="form-textarea" 
+              <textarea
+                className="form-textarea"
                 placeholder="Additional details, instructions, results..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -481,25 +587,25 @@ const Reports = () => {
             {/* Form Actions */}
             <div className="flex gap-2 pt-2">
               {file && (
-                <Button 
+                <Button
                   variant="secondary"
                   size="sm"
-                  onClick={resetForm} 
+                  onClick={resetForm}
                   className="w-1/3"
                   disabled={submitting}
                 >
                   Clear
                 </Button>
               )}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 variant="primary"
                 size="sm"
                 loading={submitting}
                 disabled={submitting || !file}
                 className={file ? 'w-2/3' : 'w-full'}
               >
-                Upload File
+                Upload & Analyze
               </Button>
             </div>
           </form>
@@ -507,15 +613,15 @@ const Reports = () => {
 
         {/* Right Side: Reports Grid & Filters */}
         <div className="space-y-5">
-          
+
           {/* Filters Row */}
           <Card className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3" hoverable={false}>
             {/* Search Input */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-              <input 
-                type="text" 
-                className="form-input pl-9 py-2 text-caption" 
+              <input
+                type="text"
+                className="form-input pl-9 py-2 text-caption"
                 placeholder="Search reports by title, doctor, patient..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -525,13 +631,13 @@ const Reports = () => {
             {/* Category Filter */}
             <div className="flex items-center gap-1.5 flex-wrap">
               <Filter size={14} className="text-gray-400" />
-              {categories.map(cat => (
+              {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all
-                    ${selectedCategory === cat 
-                      ? 'bg-black text-white' 
+                    ${selectedCategory === cat
+                      ? 'bg-black text-white'
                       : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'}`}
                 >
                   {cat === 'All' ? 'All categories' : cat}
@@ -549,15 +655,26 @@ const Reports = () => {
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredReports.map(report => (
+              {filteredReports.map((report) => (
                 <Card key={report._id} className="flex flex-col justify-between group animate-fade-in">
                   <div className="space-y-3">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-1 flex-1">
-                        <Badge variant="secondary" className="text-[9px] py-0.5">
-                          {report.category}
-                        </Badge>
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge variant="secondary" className="text-[9px] py-0.5">
+                            {report.category}
+                          </Badge>
+                          {/* AI Processing status micro-badge */}
+                          <ProcessingBadge processingStatus={report.processingStatus} />
+                          {/* AI Complete indicator */}
+                          {report.processingStatus === 'completed' && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                              <Sparkles size={9} />
+                              AI
+                            </span>
+                          )}
+                        </div>
                         <h4 className="text-body font-bold text-gray-900 leading-snug line-clamp-2">
                           {report.title}
                         </h4>
@@ -565,14 +682,14 @@ const Reports = () => {
 
                       {/* Actions */}
                       <div className="flex gap-1 flex-shrink-0">
-                        <button 
+                        <button
                           onClick={() => handleOpenPreview(report)}
                           className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
-                          title="Preview Document"
+                          title="Preview & AI Analysis"
                         >
                           <Eye size={14} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteReport(report._id)}
                           className="w-7 h-7 rounded-md hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
                           title="Delete Document"
@@ -614,14 +731,14 @@ const Reports = () => {
             </div>
           )}
         </div>
-
       </div>
 
-      {/* Global Preview Modal */}
-      <PreviewModal 
+      {/* AI-enhanced Report Preview Modal */}
+      <ReportPreview
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
         report={previewReport}
+        onReportUpdate={handleReportUpdate}
       />
     </div>
   );

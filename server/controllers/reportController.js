@@ -1,6 +1,7 @@
 import fs from 'fs';
 import cloudinary from '../config/cloudinary.js';
 import MedicalReport from '../models/MedicalReport.js';
+import { processReport } from '../services/reportProcessor.service.js';
 
 // @desc    Upload a new medical report / prescription
 // @route   POST /api/reports
@@ -45,6 +46,16 @@ export const uploadReport = async (req, res, next) => {
       cloudinaryId: cloudinaryResult.public_id,
       notes,
       date: date || new Date(),
+      processingStatus: 'pending',
+      ocrStatus: 'pending',
+    });
+
+    // ── Fire-and-forget AI processing pipeline ────────────────────────────────
+    // Non-blocking: respond immediately, process in background
+    setImmediate(() => {
+      processReport(newReport._id.toString(), newReport.fileUrl).catch((err) => {
+        console.error(`[UploadReport] Background pipeline error for ${newReport._id}:`, err.message);
+      });
     });
 
     res.status(201).json(newReport);
@@ -60,6 +71,79 @@ export const getReports = async (req, res, next) => {
   try {
     const reports = await MedicalReport.find({ user: req.user._id }).sort({ date: -1 });
     res.json(reports);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get a single report by ID (with AI data)
+// @route   GET /api/reports/:id
+// @access  Private
+export const getReportById = async (req, res, next) => {
+  try {
+    const report = await MedicalReport.findById(req.params.id);
+
+    if (!report) {
+      res.status(404);
+      throw new Error('Report not found');
+    }
+
+    // Verify ownership
+    if (report.user.toString() !== req.user._id.toString()) {
+      res.status(401);
+      throw new Error('User not authorized');
+    }
+
+    res.json(report);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Retry AI processing for an existing report
+// @route   POST /api/reports/:id/retry
+// @access  Private
+export const retryProcessing = async (req, res, next) => {
+  try {
+    const report = await MedicalReport.findById(req.params.id);
+
+    if (!report) {
+      res.status(404);
+      throw new Error('Report not found');
+    }
+
+    // Verify ownership
+    if (report.user.toString() !== req.user._id.toString()) {
+      res.status(401);
+      throw new Error('User not authorized');
+    }
+
+    // Only allow retry if currently failed or pending
+    if (!['failed', 'pending'].includes(report.processingStatus)) {
+      res.status(400);
+      throw new Error(`Cannot retry — current status is "${report.processingStatus}". Wait for processing to complete first.`);
+    }
+
+    // Reset status to pending
+    await MedicalReport.findByIdAndUpdate(report._id, {
+      processingStatus: 'pending',
+    });
+
+    // Determine if we need to force re-run OCR (only if OCR previously failed)
+    const forceOcr = report.ocrStatus !== 'success';
+
+    // Fire-and-forget retry
+    setImmediate(() => {
+      processReport(report._id.toString(), report.fileUrl, forceOcr).catch((err) => {
+        console.error(`[RetryProcessing] Background pipeline error for ${report._id}:`, err.message);
+      });
+    });
+
+    res.json({
+      message: 'Processing retry initiated.',
+      reportId: report._id,
+      forceOcr,
+    });
   } catch (error) {
     next(error);
   }

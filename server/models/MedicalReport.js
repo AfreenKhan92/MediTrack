@@ -43,6 +43,40 @@ const medicalReportSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+
+    // ── AI Pipeline Fields (all optional) ───────────────────────────────────
+    /** Raw text extracted by OCR.Space */
+    ocrText: {
+      type: String,
+      default: null,
+    },
+    /** Structured medical data extracted by Gemini AI */
+    parsedData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    /** Patient-friendly AI-generated summary */
+    summary: {
+      type: String,
+      default: null,
+    },
+    /** OCR extraction status */
+    ocrStatus: {
+      type: String,
+      enum: ['pending', 'success', 'failed'],
+      default: 'pending',
+    },
+    /** Overall AI processing pipeline status */
+    processingStatus: {
+      type: String,
+      enum: ['pending', 'ocr_processing', 'ai_processing', 'completed', 'failed'],
+      default: 'pending',
+    },
+    /** Timestamp when AI processing completed */
+    processedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -51,3 +85,4 @@ const medicalReportSchema = new mongoose.Schema(
 
 const MedicalReport = mongoose.model('MedicalReport', medicalReportSchema);
 export default MedicalReport;
+
