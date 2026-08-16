@@ -381,259 +381,112 @@ const Profile = () => {
         </div>
       </motion.div>
 
-      {/* Main Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Column (Col Span 7): SECTION 2 - Personal Information */}
-        <div className="lg:col-span-7 space-y-6">
-          <motion.div variants={cardVariants}>
-            <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 space-y-6 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
-              <div>
-                <h2 className="text-[22px] font-bold text-gray-900">Personal Information</h2>
-                <p className="text-[14px] text-gray-500 mt-1">Demographic and emergency medical details.</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="flex items-start gap-3">
-                  <User size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Full Name</span>
-                    <span className="text-[16px] font-medium text-gray-900 block mt-1">{user?.name || '—'}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Mail size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Email Address</span>
-                    <span className="text-[16px] font-medium text-gray-900 block mt-1">{user?.email || '—'}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Phone size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Phone Number</span>
-                    <span className={`text-[16px] font-medium block mt-1 ${personalInfo.phone ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {personalInfo.phone || 'Not Added'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Globe size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Gender</span>
-                    <span className={`text-[16px] font-medium block mt-1 ${personalInfo.gender ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {personalInfo.gender || 'Not Added'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Calendar size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Date of Birth</span>
-                    <span className={`text-[16px] font-medium block mt-1 ${personalInfo.dateOfBirth ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {personalInfo.dateOfBirth
-                        ? new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', { dateStyle: 'long' })
-                        : 'Not Added'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Heart size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Blood Group</span>
-                    <span className={`text-[16px] font-medium block mt-1 ${personalInfo.bloodGroup && personalInfo.bloodGroup !== 'Unknown' ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {personalInfo.bloodGroup && personalInfo.bloodGroup !== 'Unknown' ? personalInfo.bloodGroup : 'Not Added'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 sm:col-span-2">
-                  <Compass size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Address</span>
-                    <span className={`text-[16px] font-medium block mt-1 ${personalInfo.address ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {personalInfo.address || 'Not Added'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
-                  <ShieldAlert size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Primary Emergency Contact</span>
-                    <span className={`text-[16px] font-medium block mt-1 ${emergencyContact ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {emergencyContact
-                        ? `${emergencyContact.name} (${emergencyContact.phone}) [${emergencyContact.type}]`
-                        : 'Not Added'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
-                  <CheckSquare size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Medical ID</span>
-                    <span className="text-[16px] font-medium text-gray-400 block mt-1">Not Added</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
-                  <Settings size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Emergency Medical Notes</span>
-                    <p className={`text-[16px] font-medium mt-1 leading-relaxed ${personalInfo.emergencyNotes ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {personalInfo.emergencyNotes || 'Not Added'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Right Column (Col Span 5): SECTION 3 - Account Information & Preferences */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* SECTION 3: Account Information */}
-          <motion.div variants={cardVariants}>
-            <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 space-y-6 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
-              <div>
-                <h2 className="text-[22px] font-bold text-gray-900">Account Information</h2>
-                <p className="text-[14px] text-gray-500 mt-1">Security metadata and session audits.</p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">User ID</span>
-                  <span className="font-mono text-[14px] text-gray-900 font-semibold">{user?._id || user?.id}</span>
-                </div>
-
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Registration Date</span>
-                  <span className="text-[16px] font-medium text-gray-900">
-                    {registrationDate.toLocaleDateString('en-US', { dateStyle: 'medium' })}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Last Login</span>
-                  <span className="text-[16px] font-medium text-gray-900">
-                    {new Date().toLocaleDateString('en-US', { dateStyle: 'medium' })}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Email Verified</span>
-                  <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded text-[10px] uppercase tracking-wide">
-                    Verified
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Role</span>
-                  <span className="text-[16px] font-medium text-gray-900 capitalize">{user?.role || 'user'}</span>
-                </div>
-
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Session Status</span>
-                  <span className="inline-flex items-center gap-1 font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded text-[10px] uppercase tracking-wide">
-                    Active
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Preferences Card */}
-          <motion.div variants={cardVariants}>
-            <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 space-y-6 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-[22px] font-bold text-gray-900">Preferences</h2>
-                  <p className="text-[14px] text-gray-500 mt-1">Application localization and themes.</p>
-                </div>
-                <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                  Coming Soon
-                </span>
-              </div>
-
-              <div className="space-y-4 opacity-60">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Theme</span>
-                  <span className="text-[14px] font-medium text-gray-900">Light Theme</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Language</span>
-                  <span className="text-[14px] font-medium text-gray-900">English (US)</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Notification Settings</span>
-                  <span className="text-[14px] font-medium text-gray-900">All Notifications Enabled</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Timezone</span>
-                  <span className="text-[14px] font-medium text-gray-900">UTC +05:30 (IST)</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-        </div>
-
-      </div>
-
-      {/* DANGER ZONE: Bottom Warning Card */}
+      {/* SECTION 2 - Personal Information */}
       <motion.div variants={cardVariants}>
-        <div className="p-8 bg-white rounded-2xl shadow-sm border border-red-200 flex flex-col md:flex-row items-center justify-between gap-6 mt-6 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
-          <div className="flex items-center gap-3.5">
-            <div className="p-2.5 bg-red-50 text-red-600 rounded-xl">
-              <ShieldAlert size={20} />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-bold text-red-900">Danger Zone</h3>
-              <p className="text-[14px] text-gray-500 mt-1">Export your data or permanently deactivate or delete your account records.</p>
-            </div>
+        <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 space-y-6 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
+          <div>
+            <h2 className="text-[22px] font-bold text-gray-900">Personal Information</h2>
+            <p className="text-[14px] text-gray-500 mt-1">Demographic and emergency medical details.</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              icon={Download}
-              className="w-full sm:w-auto justify-center border-gray-200 text-gray-700 font-bold"
-              onClick={handleExportData}
-            >
-              Export Data
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              icon={Ban}
-              className="w-full sm:w-auto justify-center border-red-200 hover:bg-red-50 text-red-600 font-bold"
-              onClick={() => {
-                setDeleteConfirmText('');
-                setShowDeleteModal(true);
-              }}
-            >
-              Deactivate Account
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              icon={Trash2}
-              className="w-full sm:w-auto justify-center font-bold"
-              onClick={() => {
-                setDeleteConfirmText('');
-                setShowDeleteModal(true);
-              }}
-            >
-              Delete Account
-            </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+            <div className="flex items-start gap-3">
+              <User size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Full Name</span>
+                <span className="text-[16px] font-medium text-gray-900 block mt-1">{user?.name || '—'}</span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Mail size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Email Address</span>
+                <span className="text-[16px] font-medium text-gray-900 block mt-1">{user?.email || '—'}</span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Phone size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Phone Number</span>
+                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.phone ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {personalInfo.phone || 'Not Added'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Globe size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Gender</span>
+                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.gender ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {personalInfo.gender || 'Not Added'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Calendar size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Date of Birth</span>
+                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.dateOfBirth ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {personalInfo.dateOfBirth
+                    ? new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', { dateStyle: 'long' })
+                    : 'Not Added'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Heart size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Blood Group</span>
+                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.bloodGroup && personalInfo.bloodGroup !== 'Unknown' ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {personalInfo.bloodGroup && personalInfo.bloodGroup !== 'Unknown' ? personalInfo.bloodGroup : 'Not Added'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 sm:col-span-2">
+              <Compass size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Address</span>
+                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.address ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {personalInfo.address || 'Not Added'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
+              <ShieldAlert size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Primary Emergency Contact</span>
+                <span className={`text-[16px] font-medium block mt-1 ${emergencyContact ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {emergencyContact
+                    ? `${emergencyContact.name} (${emergencyContact.phone}) [${emergencyContact.type}]`
+                    : 'Not Added'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
+              <CheckSquare size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Medical ID</span>
+                <span className="text-[16px] font-medium text-gray-400 block mt-1">Not Added</span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
+              <Settings size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Emergency Medical Notes</span>
+                <p className={`text-[16px] font-medium mt-1 leading-relaxed ${personalInfo.emergencyNotes ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {personalInfo.emergencyNotes || 'Not Added'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>

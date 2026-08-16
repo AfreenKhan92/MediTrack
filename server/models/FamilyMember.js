@@ -50,6 +50,22 @@ const familyMemberSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    heightCm: {
+      type: Number,
+      default: null,
+    },
+    weightKg: {
+      type: Number,
+      default: null,
+    },
+    bmi: {
+      type: Number,
+      default: null,
+    },
+    bmiCategory: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

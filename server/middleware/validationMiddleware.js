@@ -61,7 +61,7 @@ const VALID_RELATIONS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Grandp
 const VALID_BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
 
 export const validateFamilyMember = (req, res, next) => {
-  const { name, relation, age, bloodGroup } = req.body;
+  const { name, relation, age, bloodGroup, heightCm, weightKg } = req.body;
   const errors = {};
 
   if (!name || name.trim() === '') {
@@ -82,6 +82,20 @@ export const validateFamilyMember = (req, res, next) => {
 
   if (bloodGroup && !VALID_BLOOD_GROUPS.includes(bloodGroup)) {
     errors.bloodGroup = `Blood group must be one of: ${VALID_BLOOD_GROUPS.join(', ')}`;
+  }
+
+  if (heightCm !== undefined && heightCm !== null && heightCm !== '') {
+    const h = Number(heightCm);
+    if (isNaN(h) || h < 50 || h > 300) {
+      errors.heightCm = 'Height must be a number between 50 and 300 cm';
+    }
+  }
+
+  if (weightKg !== undefined && weightKg !== null && weightKg !== '') {
+    const w = Number(weightKg);
+    if (isNaN(w) || w < 1 || w > 700) {
+      errors.weightKg = 'Weight must be a number between 1 and 700 kg';
+    }
   }
 
   if (Object.keys(errors).length > 0) {

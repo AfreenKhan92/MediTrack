@@ -1,9 +1,11 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Menu, LogOut, Bell, Search } from 'lucide-react';
+import { useTheme } from '../hooks/useTheme';
+import { Menu, LogOut, Bell, Search, Sun, Moon } from 'lucide-react';
 
 const TopNavbar = ({ onMenuToggle, sidebarCollapsed }) => {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   return (
     <header
@@ -34,8 +36,18 @@ const TopNavbar = ({ onMenuToggle, sidebarCollapsed }) => {
         </div>
       </div>
 
-      {/* Right side: Notifications + User */}
+      {/* Right side: Dark Theme Toggle + Notifications + User */}
       <div className="flex items-center gap-3">
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className="w-9 h-9 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-150"
+          title={isDarkMode ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+          aria-label="Toggle theme"
+        >
+          {isDarkMode ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} />}
+        </button>
+
         {/* Notification bell */}
         <button className="relative w-9 h-9 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-150">
           <Bell size={16} />

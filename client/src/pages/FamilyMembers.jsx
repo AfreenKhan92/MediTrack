@@ -25,6 +25,8 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
   const [bloodGroup, setBloodGroup] = useState('Unknown');
   const [allergies, setAllergies] = useState('');
   const [notes, setNotes] = useState('');
+  const [heightCm, setHeightCm] = useState('');
+  const [weightKg, setWeightKg] = useState('');
   const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
@@ -35,6 +37,8 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
       setBloodGroup(member.bloodGroup || 'Unknown');
       setAllergies(member.allergies ? member.allergies.join(', ') : '');
       setNotes(member.notes || '');
+      setHeightCm(member.heightCm || '');
+      setWeightKg(member.weightKg || '');
     } else {
       setName('');
       setRelation('Child');
@@ -42,6 +46,8 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
       setBloodGroup('Unknown');
       setAllergies('');
       setNotes('');
+      setHeightCm('');
+      setWeightKg('');
     }
     setValidationError('');
   }, [member, isOpen]);
@@ -66,13 +72,25 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
       ? allergies.split(',').map(a => a.trim()).filter(a => a !== '')
       : [];
 
+    // Optional height/weight validation on the client side
+    if (heightCm !== '' && (isNaN(Number(heightCm)) || Number(heightCm) < 50 || Number(heightCm) > 300)) {
+      setValidationError('Height must be a number between 50 and 300 cm');
+      return;
+    }
+    if (weightKg !== '' && (isNaN(Number(weightKg)) || Number(weightKg) < 1 || Number(weightKg) > 700)) {
+      setValidationError('Weight must be a number between 1 and 700 kg');
+      return;
+    }
+
     onSubmit({
       name,
       relation,
       age: Number(age),
       bloodGroup,
       allergies: allergyList,
-      notes
+      notes,
+      heightCm: heightCm !== '' ? Number(heightCm) : null,
+      weightKg: weightKg !== '' ? Number(weightKg) : null,
     });
   };
 
@@ -158,6 +176,35 @@ const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
             >
               {bloodGroups.map(bg => <option key={bg} value={bg}>{bg}</option>)}
             </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="form-group mb-0">
+              <label className="form-label">Height (cm) <span className="text-gray-400 font-normal">(Optional)</span></label>
+              <input 
+                type="number" 
+                className="form-input" 
+                placeholder="e.g. 170"
+                value={heightCm}
+                onChange={(e) => setHeightCm(e.target.value)}
+                disabled={loading}
+                min="50"
+                max="300"
+              />
+            </div>
+            <div className="form-group mb-0">
+              <label className="form-label">Weight (kg) <span className="text-gray-400 font-normal">(Optional)</span></label>
+              <input 
+                type="number" 
+                className="form-input" 
+                placeholder="e.g. 68"
+                value={weightKg}
+                onChange={(e) => setWeightKg(e.target.value)}
+                disabled={loading}
+                min="1"
+                max="700"
+              />
+            </div>
           </div>
 
           <div className="form-group mb-0">
@@ -405,6 +452,33 @@ const FamilyMembers = () => {
                     <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Blood Group</p>
                     <p className="text-gray-900 font-semibold">{member.bloodGroup}</p>
                   </div>
+                  {(member.heightCm || member.weightKg) && (
+                    <>
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Height</p>
+                        <p className="text-gray-900 font-semibold">{member.heightCm ? `${member.heightCm} cm` : '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Weight</p>
+                        <p className="text-gray-900 font-semibold">{member.weightKg ? `${member.weightKg} kg` : '—'}</p>
+                      </div>
+                    </>
+                  )}
+                  {member.bmi && (
+                    <div className="col-span-2">
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">BMI</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-gray-900 font-semibold">{member.bmi}</p>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          member.bmiCategory === 'Normal weight' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          member.bmiCategory === 'Overweight'   ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                          member.bmiCategory === 'Obese'        ? 'bg-red-50 text-red-700 border border-red-100' :
+                          member.bmiCategory === 'Underweight'  ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                          'bg-gray-50 text-gray-600 border border-gray-100'
+                        }`}>{member.bmiCategory}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Health Status */}
