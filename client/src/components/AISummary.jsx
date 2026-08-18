@@ -49,16 +49,16 @@ const AISummary = ({ summary, reportTitle = 'Medical Report' }) => {
   };
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-blue-200 shadow-sm">
-      {/* Header gradient */}
-      <div className="bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-3.5 flex items-center justify-between">
+    <div className="rounded-2xl overflow-hidden border border-blue-200 dark:border-[#2A2C30] bg-white dark:bg-[#17181A] shadow-sm transition-colors">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-violet-600 dark:from-[#17181A] dark:to-[#17181A] dark:border-b dark:border-[#2A2C30] px-4 py-3.5 flex items-center justify-between transition-colors">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-            <Sparkles size={14} className="text-white" />
+          <div className="w-7 h-7 bg-white/20 dark:bg-blue-600/20 dark:border dark:border-blue-500/30 backdrop-blur-sm rounded-lg flex items-center justify-center">
+            <Sparkles size={14} className="text-white dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-none">AI Summary</p>
-            <p className="text-white/70 text-[10px] mt-0.5">Powered by Google Gemini</p>
+            <p className="text-white dark:text-[#F5F5F5] font-bold text-sm leading-none">AI Summary</p>
+            <p className="text-white/70 dark:text-[#A1A1AA] text-[10px] mt-0.5">Powered by Google Gemini</p>
           </div>
         </div>
 
@@ -66,18 +66,18 @@ const AISummary = ({ summary, reportTitle = 'Medical Report' }) => {
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold transition-all duration-150 border border-white/20"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 dark:bg-[#1D1F22] dark:hover:bg-[#2A2C30] text-white dark:text-[#F5F5F5] text-[11px] font-semibold transition-all duration-150 border border-white/20 dark:border-[#2A2C30]"
             title="Copy summary"
           >
             {copied ? (
-              <><CheckCheck size={12} /><span>Copied!</span></>
+              <><CheckCheck size={12} className="text-emerald-400" /><span>Copied!</span></>
             ) : (
               <><Copy size={12} /><span>Copy</span></>
             )}
           </button>
           <button
             onClick={handleDownload}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold transition-all duration-150 border border-white/20"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 dark:bg-[#1D1F22] dark:hover:bg-[#2A2C30] text-white dark:text-[#F5F5F5] text-[11px] font-semibold transition-all duration-150 border border-white/20 dark:border-[#2A2C30]"
             title="Download summary as .txt"
           >
             <Download size={12} />
@@ -87,10 +87,11 @@ const AISummary = ({ summary, reportTitle = 'Medical Report' }) => {
       </div>
 
       {/* Summary text */}
-      <div className="bg-gradient-to-b from-blue-50/50 to-white p-4">
-        <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
-        <p className="text-[10px] text-gray-400 mt-3 pt-3 border-t border-gray-100 italic">
-          ⚕️ This summary is for informational purposes only. Always consult a qualified healthcare professional for medical advice.
+      <div className="bg-gradient-to-b from-blue-50/50 to-white dark:from-[#111214] dark:to-[#111214] p-4.5 sm:p-5 transition-colors">
+        <p className="text-sm text-gray-800 dark:text-[#F5F5F5] leading-relaxed whitespace-pre-line font-normal">{summary}</p>
+        <p className="text-[11px] text-gray-500 dark:text-[#71717A] mt-4 pt-3 border-t border-gray-100 dark:border-[#2A2C30] italic flex items-center gap-1.5">
+          <span>⚕️</span>
+          <span>This summary is for informational purposes only. Always consult a qualified healthcare professional for medical advice.</span>
         </p>
       </div>
     </div>
