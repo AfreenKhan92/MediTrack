@@ -448,7 +448,7 @@ const Vaccinations = () => {
           <div className="w-48 h-7 bg-gray-200 rounded animate-pulse mb-2" />
           <div className="w-72 h-4 bg-gray-100 rounded animate-pulse" />
         </div>
-        <SkeletonLoader type="card" count={3} />
+        <SkeletonLoader type="vaccine" count={4} />
       </div>
     );
   }

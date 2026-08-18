@@ -2,9 +2,10 @@ import React from 'react';
 
 const TimelineSkeleton = ({ count = 5 }) => {
   return (
-    <div className="space-y-0">
+    <div className="space-y-0" role="status" aria-busy="true">
+      <span className="sr-only">Loading health timeline...</span>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="relative flex gap-4 animate-pulse">
+        <div key={i} className="relative flex gap-4 animate-pulse motion-reduce:animate-none">
           {/* Left rail dot */}
           <div className="flex flex-col items-center flex-shrink-0">
             <div className="w-3.5 h-3.5 rounded-full bg-gray-300 border-2 border-white mt-1.5 flex-shrink-0" />

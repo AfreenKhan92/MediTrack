@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Activity, FileText, CalendarDays, Pill, Syringe, ChevronRight } from 'lucide-react';
 import Card from './Card';
 import SectionHeader from './SectionHeader';
+import { SkeletonLoader } from './SkeletonLoader';
 import timelineService from '../services/timelineService';
 
 // ─── Type icon map ────────────────────────────────────────────────────────────
@@ -60,7 +61,7 @@ const RecentTimeline = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const displayEvents = loading ? FALLBACK : events.length > 0 ? events : FALLBACK;
+  const displayEvents = events.length > 0 ? events : FALLBACK;
 
   return (
     <Card className="space-y-4">
@@ -71,7 +72,10 @@ const RecentTimeline = () => {
         actionLink="/timeline"
       />
 
-      <div className="space-y-2.5">
+      {loading ? (
+        <SkeletonLoader type="timeline" count={5} />
+      ) : (
+        <div className="space-y-2.5">
         {displayEvents.map((item) => {
           const Icon = TYPE_ICON[item.type] || FileText;
           const colorClass = TYPE_COLOR[item.type] || TYPE_COLOR.report;
@@ -98,6 +102,7 @@ const RecentTimeline = () => {
           );
         })}
       </div>
+      )}
 
       <Link
         to="/timeline"

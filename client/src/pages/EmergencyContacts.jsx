@@ -569,7 +569,7 @@ const EmergencyContacts = () => {
           <div className="w-56 h-7 bg-gray-200 rounded animate-pulse mb-2" />
           <div className="w-80 h-4 bg-gray-100 rounded animate-pulse" />
         </div>
-        <SkeletonLoader type="card" count={4} />
+        <SkeletonLoader type="contact" count={4} />
       </div>
     );
   }

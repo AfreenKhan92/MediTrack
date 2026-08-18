@@ -342,7 +342,7 @@ const Profile = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <FileText size={18} className="text-gray-400" />
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[16px] font-bold text-gray-900">{stats.reports}</span>
+              {loadingStats ? <span className="w-5 h-4 bg-gray-200 rounded animate-pulse inline-block" /> : <span className="text-[16px] font-bold text-gray-900">{stats.reports}</span>}
               <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Reports</span>
             </div>
           </div>
@@ -350,7 +350,7 @@ const Profile = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <Users size={18} className="text-gray-400" />
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[16px] font-bold text-gray-900">{stats.family}</span>
+              {loadingStats ? <span className="w-5 h-4 bg-gray-200 rounded animate-pulse inline-block" /> : <span className="text-[16px] font-bold text-gray-900">{stats.family}</span>}
               <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Family</span>
             </div>
           </div>
@@ -358,7 +358,7 @@ const Profile = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <CalendarDays size={18} className="text-gray-400" />
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[16px] font-bold text-gray-900">{stats.appointments}</span>
+              {loadingStats ? <span className="w-5 h-4 bg-gray-200 rounded animate-pulse inline-block" /> : <span className="text-[16px] font-bold text-gray-900">{stats.appointments}</span>}
               <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Appointments</span>
             </div>
           </div>
@@ -366,7 +366,7 @@ const Profile = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <Syringe size={18} className="text-gray-400" />
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[16px] font-bold text-gray-900">{stats.vaccinations}</span>
+              {loadingStats ? <span className="w-5 h-4 bg-gray-200 rounded animate-pulse inline-block" /> : <span className="text-[16px] font-bold text-gray-900">{stats.vaccinations}</span>}
               <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Vaccines</span>
             </div>
           </div>
@@ -374,7 +374,7 @@ const Profile = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <Activity size={18} className="text-gray-400" />
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[16px] font-bold text-gray-900">{stats.timeline}</span>
+              {loadingStats ? <span className="w-5 h-4 bg-gray-200 rounded animate-pulse inline-block" /> : <span className="text-[16px] font-bold text-gray-900">{stats.timeline}</span>}
               <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Events</span>
             </div>
           </div>

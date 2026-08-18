@@ -9,7 +9,7 @@ const Navbar = () => {
   return (
     <nav className="glass-panel" style={{ borderRadius: '0', borderLeft: '0', borderRight: '0', borderTop: '0', marginBottom: '2rem' }}>
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px' }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--primary)' }}>
+        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--primary)' }}>
           <Activity size={24} />
           <span style={{ fontFamily: 'Outfit', color: 'var(--text-primary)' }}>Medi<span style={{ color: 'var(--primary)' }}>Track</span></span>
         </Link>

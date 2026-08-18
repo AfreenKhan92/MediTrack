@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -49,10 +49,16 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
         `}
       >
         {/* Logo Area */}
-        <div className={`
-          flex items-center h-[64px] px-4 border-b border-gray-200
-          ${collapsed ? 'justify-center' : 'gap-3'}
-        `}>
+        <Link
+          to="/dashboard"
+          onClick={() => setMobileOpen(false)}
+          className={`
+            flex items-center h-[64px] px-4 border-b border-gray-200
+            cursor-pointer hover:opacity-90 transition-opacity
+            ${collapsed ? 'justify-center' : 'gap-3'}
+          `}
+          title="Go to Dashboard"
+        >
           <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
             <Activity size={20} />
           </div>
@@ -61,7 +67,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
               MediTrack
             </span>
           )}
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-2.5">
