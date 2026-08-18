@@ -1,12 +1,13 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
-import { Menu, LogOut, Sun, Moon } from 'lucide-react';
+import { Menu, Sun, Moon } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import GlobalSearch from './GlobalSearch';
 
 const TopNavbar = ({ onMenuToggle, sidebarCollapsed }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
 
   return (
@@ -43,25 +44,21 @@ const TopNavbar = ({ onMenuToggle, sidebarCollapsed }) => {
         {/* Notification Bell */}
         <NotificationBell />
 
-        {/* User info + Logout */}
+        {/* User info + Avatar (click → Profile) */}
         <div className="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-[#2A2C30]">
           <div className="hidden sm:block text-right">
             <p className="text-body font-semibold text-gray-900 dark:text-[#F5F5F5] leading-tight">{user?.name || 'User'}</p>
             <p className="text-caption text-gray-500 dark:text-[#A1A1AA]">{user?.email || ''}</p>
           </div>
 
-          {/* Avatar */}
-          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-caption flex-shrink-0 shadow-xs">
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-          </div>
-
-          <button
-            onClick={logout}
-            className="w-8 h-8 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center text-gray-500 dark:text-[#A1A1AA] transition-all duration-150"
-            title="Logout"
+          {/* Avatar — click navigates to Profile */}
+          <Link
+            to="/profile"
+            title="View your profile"
+            className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-caption flex-shrink-0 shadow-xs hover:opacity-85 transition-opacity duration-150 cursor-pointer"
           >
-            <LogOut size={16} />
-          </button>
+            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          </Link>
         </div>
       </div>
     </header>

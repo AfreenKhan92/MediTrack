@@ -6,7 +6,7 @@ import {
   CheckCircle2, AlertTriangle, Eye, RefreshCw, Key, Users, CalendarDays,
   Syringe, Heart, Database, Image, Scan, Brain, Compass, Server, Check,
   ArrowRight, HelpCircle, Ban, Download, FileJson, Trash2, Edit3, UserCheck,
-  Plus, Globe, Clock, ShieldAlert, CheckSquare, Sparkles, X, FileText
+  Plus, Globe, Clock, ShieldAlert, CheckSquare, Sparkles, X, FileText, LogOut
 } from 'lucide-react';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
@@ -458,36 +458,8 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
-              <ShieldAlert size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Primary Emergency Contact</span>
-                <span className={`text-[16px] font-medium block mt-1 ${emergencyContact ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {emergencyContact
-                    ? `${emergencyContact.name} (${emergencyContact.phone}) [${emergencyContact.type}]`
-                    : 'Not Added'}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
-              <CheckSquare size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Medical ID</span>
-                <span className="text-[16px] font-medium text-gray-400 block mt-1">Not Added</span>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 sm:col-span-2 border-t border-gray-100 pt-4">
-              <Settings size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Emergency Medical Notes</span>
-                <p className={`text-[16px] font-medium mt-1 leading-relaxed ${personalInfo.emergencyNotes ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {personalInfo.emergencyNotes || 'Not Added'}
-                </p>
-              </div>
-            </div>
           </div>
+
         </div>
       </motion.div>
 
@@ -751,6 +723,33 @@ const Profile = () => {
         )}
 
       </AnimatePresence>
+
+      {/* ── SIGN OUT ── */}
+      <motion.div variants={cardVariants}>
+        <div className="p-6 bg-white dark:bg-[#17181A] rounded-2xl shadow-sm border border-gray-100 dark:border-[#2A2C30] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center flex-shrink-0">
+              <LogOut size={18} className="text-red-500" />
+            </div>
+            <div>
+              <p className="text-[15px] font-bold text-gray-900 dark:text-[#F5F5F5] leading-tight">Sign Out</p>
+              <p className="text-[13px] text-gray-500 dark:text-[#71717A] mt-0.5">
+                You will be logged out of your MediTrack account on this device.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="danger"
+            size="sm"
+            icon={LogOut}
+            onClick={logout}
+            className="w-full sm:w-auto justify-center flex-shrink-0"
+          >
+            Sign Out
+          </Button>
+        </div>
+      </motion.div>
+
     </motion.div>
   );
 };
