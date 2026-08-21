@@ -6,7 +6,8 @@ import {
   CheckCircle2, AlertTriangle, Eye, RefreshCw, Key, Users, CalendarDays,
   Syringe, Heart, Database, Image, Scan, Brain, Compass, Server, Check,
   ArrowRight, HelpCircle, Ban, Download, FileJson, Trash2, Edit3, UserCheck,
-  Plus, Globe, Clock, ShieldAlert, CheckSquare, Sparkles, X, FileText, LogOut
+  Plus, Globe, Clock, ShieldAlert, CheckSquare, Sparkles, X, FileText, LogOut,
+  Loader2
 } from 'lucide-react';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
@@ -21,11 +22,12 @@ import reminderService from '../services/reminderService';
 import vaccineService from '../services/vaccineService';
 import timelineService from '../services/timelineService';
 import emergencyContactService from '../services/emergencyContactService';
+import profileService from '../services/profileService';
 
 const Profile = () => {
   const { user, logout } = useAuth();
 
-  // Simulated Local State to allow visual updates without database mutation
+  // Profile data from MongoDB
   const [personalInfo, setPersonalInfo] = useState({
     phone: '',
     gender: 'Prefer not to say',
@@ -48,6 +50,11 @@ const Profile = () => {
   });
 
   const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  // Saving States
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   // Modal States
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -87,9 +94,49 @@ const Profile = () => {
 
   const registrationDate = getRegistrationDate();
 
-  // Load profile data and statistics
+  // Load profile data from MongoDB
   useEffect(() => {
-    const fetchProfileData = async () => {
+    const fetchProfile = async () => {
+      try {
+        setLoadingProfile(true);
+        const profileData = await profileService.getProfile();
+
+        const formattedDob = profileData.dateOfBirth
+          ? new Date(profileData.dateOfBirth).toISOString().substring(0, 10)
+          : '';
+
+        setPersonalInfo({
+          phone: profileData.phone || '',
+          gender: profileData.gender || 'Prefer not to say',
+          dateOfBirth: formattedDob,
+          address: profileData.address || '',
+          bloodGroup: profileData.bloodGroup || 'Unknown',
+          emergencyNotes: profileData.emergencyNotes || ''
+        });
+
+        setEditForm(prev => ({
+          ...prev,
+          name: user?.name || '',
+          phone: profileData.phone || '',
+          gender: profileData.gender || 'Prefer not to say',
+          dateOfBirth: formattedDob,
+          address: profileData.address || '',
+          bloodGroup: profileData.bloodGroup || 'Unknown',
+          emergencyNotes: profileData.emergencyNotes || ''
+        }));
+      } catch (err) {
+        console.error('Error fetching profile', err);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  // Load statistics and emergency contact
+  useEffect(() => {
+    const fetchStats = async () => {
       try {
         setLoadingStats(true);
 
@@ -111,31 +158,6 @@ const Profile = () => {
           timelineService.getTimeline().catch(() => []),
           emergencyContactService.getContacts().catch(() => [])
         ]);
-
-        // Find "Self" family profile to sync personal details
-        const selfMember = members.find(m => m.relation === 'Self' || m.name?.toLowerCase() === user?.name?.toLowerCase());
-        if (selfMember) {
-          const formattedDob = selfMember.dateOfBirth
-            ? new Date(selfMember.dateOfBirth).toISOString().substring(0, 10)
-            : '';
-
-          setPersonalInfo({
-            phone: selfMember.phone || '',
-            gender: selfMember.gender || 'Prefer not to say',
-            dateOfBirth: formattedDob,
-            address: selfMember.address || '',
-            bloodGroup: selfMember.bloodGroup || 'Unknown',
-            emergencyNotes: selfMember.notes || ''
-          });
-
-          setEditForm(prev => ({
-            ...prev,
-            gender: selfMember.gender || 'Prefer not to say',
-            dateOfBirth: formattedDob,
-            bloodGroup: selfMember.bloodGroup || 'Unknown',
-            emergencyNotes: selfMember.notes || ''
-          }));
-        }
 
         // Set emergency contact
         if (contacts && contacts.length > 0) {
@@ -159,34 +181,83 @@ const Profile = () => {
       }
     };
 
-    fetchProfileData();
+    fetchStats();
   }, [user]);
 
   // Handle Edit Profile Submission
-  const handleEditProfileSubmit = (e) => {
+  const handleEditProfileSubmit = async (e) => {
     e.preventDefault();
-    setPersonalInfo({
-      phone: editForm.phone,
-      gender: editForm.gender,
-      dateOfBirth: editForm.dateOfBirth,
-      address: editForm.address,
-      bloodGroup: editForm.bloodGroup,
-      emergencyNotes: editForm.emergencyNotes
-    });
-    setShowEditProfileModal(false);
-    showToast.success('Profile details updated simulated successfully (Demo Mode)!');
+
+    if (savingProfile) return;
+
+    try {
+      setSavingProfile(true);
+
+      const updatedProfile = await profileService.updateProfile({
+        phone: editForm.phone,
+        gender: editForm.gender,
+        dateOfBirth: editForm.dateOfBirth || null,
+        address: editForm.address,
+        bloodGroup: editForm.bloodGroup,
+        emergencyNotes: editForm.emergencyNotes
+      });
+
+      const formattedDob = updatedProfile.dateOfBirth
+        ? new Date(updatedProfile.dateOfBirth).toISOString().substring(0, 10)
+        : '';
+
+      setPersonalInfo({
+        phone: updatedProfile.phone || '',
+        gender: updatedProfile.gender || 'Prefer not to say',
+        dateOfBirth: formattedDob,
+        address: updatedProfile.address || '',
+        bloodGroup: updatedProfile.bloodGroup || 'Unknown',
+        emergencyNotes: updatedProfile.emergencyNotes || ''
+      });
+
+      setShowEditProfileModal(false);
+      showToast.success('Profile updated successfully.');
+    } catch (err) {
+      // Error toast is handled by the API interceptor
+      console.error('Error updating profile', err);
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   // Handle Change Password Submission
-  const handleChangePasswordSubmit = (e) => {
+  const handleChangePasswordSubmit = async (e) => {
     e.preventDefault();
+
+    if (savingPassword) return;
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       showToast.error('New passwords do not match');
       return;
     }
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    setShowChangePasswordModal(false);
-    showToast.success('Password changed simulated successfully (Demo Mode)!');
+
+    if (passwordForm.newPassword.length < 6) {
+      showToast.error('New password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      setSavingPassword(true);
+
+      await profileService.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
+
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setShowChangePasswordModal(false);
+      showToast.success('Password changed successfully.');
+    } catch (err) {
+      // Error toast is handled by the API interceptor
+      console.error('Error changing password', err);
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   // Handle Account Deletion
@@ -389,76 +460,83 @@ const Profile = () => {
             <p className="text-[14px] text-gray-500 mt-1">Demographic and emergency medical details.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-            <div className="flex items-start gap-3">
-              <User size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Full Name</span>
-                <span className="text-[16px] font-medium text-gray-900 block mt-1">{user?.name || '—'}</span>
-              </div>
+          {loadingProfile ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={24} className="animate-spin text-blue-500" />
+              <span className="ml-2 text-sm text-gray-500">Loading profile...</span>
             </div>
-
-            <div className="flex items-start gap-3">
-              <Mail size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Email Address</span>
-                <span className="text-[16px] font-medium text-gray-900 block mt-1">{user?.email || '—'}</span>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="flex items-start gap-3">
+                <User size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Full Name</span>
+                  <span className="text-[16px] font-medium text-gray-900 block mt-1">{user?.name || '—'}</span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <Phone size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Phone Number</span>
-                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.phone ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {personalInfo.phone || 'Not Added'}
-                </span>
+              <div className="flex items-start gap-3">
+                <Mail size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Email Address</span>
+                  <span className="text-[16px] font-medium text-gray-900 block mt-1">{user?.email || '—'}</span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <Globe size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Gender</span>
-                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.gender ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {personalInfo.gender || 'Not Added'}
-                </span>
+              <div className="flex items-start gap-3">
+                <Phone size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Phone Number</span>
+                  <span className={`text-[16px] font-medium block mt-1 ${personalInfo.phone ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {personalInfo.phone || 'Not Added'}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <Calendar size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Date of Birth</span>
-                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.dateOfBirth ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {personalInfo.dateOfBirth
-                    ? new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', { dateStyle: 'long' })
-                    : 'Not Added'}
-                </span>
+              <div className="flex items-start gap-3">
+                <Globe size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Gender</span>
+                  <span className={`text-[16px] font-medium block mt-1 ${personalInfo.gender ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {personalInfo.gender || 'Not Added'}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <Heart size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Blood Group</span>
-                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.bloodGroup && personalInfo.bloodGroup !== 'Unknown' ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {personalInfo.bloodGroup && personalInfo.bloodGroup !== 'Unknown' ? personalInfo.bloodGroup : 'Not Added'}
-                </span>
+              <div className="flex items-start gap-3">
+                <Calendar size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Date of Birth</span>
+                  <span className={`text-[16px] font-medium block mt-1 ${personalInfo.dateOfBirth ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {personalInfo.dateOfBirth
+                      ? new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', { dateStyle: 'long' })
+                      : 'Not Added'}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3 sm:col-span-2">
-              <Compass size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Address</span>
-                <span className={`text-[16px] font-medium block mt-1 ${personalInfo.address ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {personalInfo.address || 'Not Added'}
-                </span>
+              <div className="flex items-start gap-3">
+                <Heart size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Blood Group</span>
+                  <span className={`text-[16px] font-medium block mt-1 ${personalInfo.bloodGroup && personalInfo.bloodGroup !== 'Unknown' ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {personalInfo.bloodGroup && personalInfo.bloodGroup !== 'Unknown' ? personalInfo.bloodGroup : 'Not Added'}
+                  </span>
+                </div>
               </div>
-            </div>
 
-          </div>
+              <div className="flex items-start gap-3 sm:col-span-2">
+                <Compass size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider block">Address</span>
+                  <span className={`text-[16px] font-medium block mt-1 ${personalInfo.address ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {personalInfo.address || 'Not Added'}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          )}
 
         </div>
       </motion.div>
@@ -483,6 +561,7 @@ const Profile = () => {
                 <button
                   type="button"
                   onClick={() => setShowEditProfileModal(false)}
+                  disabled={savingProfile}
                   className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"
                 >
                   <X size={16} />
@@ -574,6 +653,7 @@ const Profile = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowEditProfileModal(false)}
+                    disabled={savingProfile}
                   >
                     Cancel
                   </Button>
@@ -581,8 +661,16 @@ const Profile = () => {
                     type="submit"
                     variant="primary"
                     size="sm"
+                    disabled={savingProfile}
                   >
-                    Save Changes
+                    {savingProfile ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 size={14} className="animate-spin" />
+                        Saving...
+                      </span>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </Button>
                 </div>
               </form>
@@ -607,6 +695,7 @@ const Profile = () => {
                 <button
                   type="button"
                   onClick={() => setShowChangePasswordModal(false)}
+                  disabled={savingPassword}
                   className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"
                 >
                   <X size={16} />
@@ -652,6 +741,7 @@ const Profile = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowChangePasswordModal(false)}
+                    disabled={savingPassword}
                   >
                     Cancel
                   </Button>
@@ -659,8 +749,16 @@ const Profile = () => {
                     type="submit"
                     variant="primary"
                     size="sm"
+                    disabled={savingPassword}
                   >
-                    Update Password
+                    {savingPassword ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 size={14} className="animate-spin" />
+                        Updating...
+                      </span>
+                    ) : (
+                      'Update Password'
+                    )}
                   </Button>
                 </div>
               </form>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { formatDate } from '../utils/dateUtils';
 import {
   X, Eye, FileText, RefreshCw, Brain, AlignLeft, Loader2
 } from 'lucide-react';
@@ -106,7 +107,7 @@ const ReportPreview = ({ isOpen, onClose, report: initialReport, onReportUpdate 
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <Badge variant="secondary" className="text-[9px] py-0">{report.category}</Badge>
                 <span className="text-[11px] text-gray-400 dark:text-[#A1A1AA]">
-                  {report.patientName} · {new Date(report.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {report.patientName} · {formatDate(report.date)}
                 </span>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { Bell, X, CheckCheck, Syringe, Pill, CalendarDays, ChevronRight, PartyPo
 import reminderService from '../services/reminderService';
 import appointmentService from '../services/appointmentService';
 import vaccineService from '../services/vaccineService';
+import { formatDate } from '../utils/dateUtils';
 
 /** Persists read IDs in localStorage so they survive page reloads */
 const STORAGE_KEY = 'meditrack_read_notification_ids';
@@ -35,10 +36,10 @@ const buildNotifications = (reminders = [], appointments = [], vaccines = []) =>
     .forEach(v => {
       const isOverdue = v.status === 'Overdue';
       const dueDate = v.nextDueDate ? new Date(v.nextDueDate) : null;
-      const dueDateStr = dueDate
+      const dueDateStr = v.nextDueDate
         ? (isOverdue
             ? 'Overdue'
-            : `Due ${dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`)
+            : `Due ${formatDate(v.nextDueDate, { month: 'short', day: 'numeric' })}`)
         : v.status;
 
       items.push({

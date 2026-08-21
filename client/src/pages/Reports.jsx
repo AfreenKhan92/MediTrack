@@ -15,6 +15,7 @@ import {
   Brain,
   Sparkles,
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import reportService from '../services/reportService';
 import { showToast } from '../utils/toast';
 import { SkeletonLoader } from '../components/SkeletonLoader';
@@ -714,7 +715,7 @@ const Reports = () => {
                       <div className="flex justify-between">
                         <span className="text-gray-500">Date:</span>
                         <span className="text-gray-900 font-semibold">
-                          {new Date(report.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {formatDate(report.date)}
                         </span>
                       </div>
                     </div>

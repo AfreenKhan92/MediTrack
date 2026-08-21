@@ -10,6 +10,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import Badge from '../../components/Badge';
+import { formatDate } from '../../utils/dateUtils';
 
 // ─── Type metadata ─────────────────────────────────────────────────────────────
 
@@ -65,17 +66,6 @@ const statusVariant = (status) => {
   if (s === 'overdue') return 'danger';
   if (s === 'cancelled' || s === 'inactive') return 'secondary';
   return 'secondary';
-};
-
-// ─── Date formatter ───────────────────────────────────────────────────────────
-
-const formatDate = (date) => {
-  if (!date) return '—';
-  return new Date(date).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
 };
 
 // ─── TimelineCard ─────────────────────────────────────────────────────────────

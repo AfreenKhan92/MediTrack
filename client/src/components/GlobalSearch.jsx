@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { formatDate } from '../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, X, Users, Pill, Syringe, CalendarDays, FileText, Activity, Clock,
@@ -62,7 +63,7 @@ const buildIndex = ({ members, reminders, appointments, vaccines, reports, timel
   // Appointments
   (appointments || []).forEach(a => {
     const date = a.appointmentDate
-      ? new Date(a.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      ? formatDate(a.appointmentDate, { month: 'short', day: 'numeric' })
       : null;
     index.push({
       id: `appt-${a._id}`,

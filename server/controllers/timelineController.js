@@ -38,10 +38,22 @@ const normalizeMedicine = (m) => ({
   relatedRecordId: m._id.toString(),
 });
 
+const formatDoseLabel = (dose) => {
+  if (dose === null || dose === undefined || dose === '') return '';
+  const str = String(dose).trim();
+  if (/^\d+$/.test(str) || /^\d+\s*[-–—]\s*\d+$/.test(str)) {
+    return `Dose #${str}`;
+  }
+  if (str.toLowerCase().startsWith('dose')) {
+    return str;
+  }
+  return str;
+};
+
 const normalizeVaccination = (v) => ({
   id: v._id.toString(),
   type: 'vaccination',
-  title: `${v.vaccineName} (Dose ${v.dose})`,
+  title: `${v.vaccineName} (${formatDoseLabel(v.dose)})`,
   description: v.administeredBy
     ? `Administered by ${v.administeredBy}`
     : v.notes || 'Vaccination record.',

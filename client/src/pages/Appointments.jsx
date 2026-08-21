@@ -12,6 +12,7 @@ import {
   Loader2,
   Filter
 } from 'lucide-react';
+import { formatDate, formatTime } from '../utils/dateUtils';
 import appointmentService from '../services/appointmentService';
 import familyService from '../services/familyService';
 import { showToast } from '../utils/toast';
@@ -559,8 +560,8 @@ const Appointments = () => {
                     <div className="flex items-center gap-2">
                       <Clock size={14} className="text-gray-400 flex-shrink-0" />
                       <span>
-                        {new Date(appt.appointmentDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at{' '}
-                        {new Date(appt.appointmentDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                        {formatDate(appt.appointmentDate, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at{' '}
+                        {formatTime(appt.appointmentDate)}
                       </span>
                     </div>
                   </div>

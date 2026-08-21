@@ -1,12 +1,13 @@
 import React from 'react';
 import { FileText, CalendarDays, Bell, Syringe, Clock } from 'lucide-react';
 import Card from './Card';
+import { formatRelativeTime } from '../utils/dateUtils';
 
 const mockActivities = [
-  { id: 1, type: 'report', title: 'Blood Cholesterol Profile uploaded', time: '2 hours ago', icon: FileText },
-  { id: 2, type: 'reminder', title: 'Amoxicillin dose marked as Completed', time: '4 hours ago', icon: Bell },
-  { id: 3, type: 'appointment', title: 'Consultation scheduled with Dr. Sarah Jenkins', time: 'Yesterday', icon: CalendarDays },
-  { id: 4, type: 'vaccine', title: 'MMR Booster vaccination recorded', time: '3 days ago', icon: Syringe },
+  { id: 1, type: 'report', title: 'Blood Cholesterol Profile uploaded', date: new Date(Date.now() - 2 * 60 * 60 * 1000), icon: FileText },
+  { id: 2, type: 'reminder', title: 'Amoxicillin dose marked as Completed', date: new Date(Date.now() - 4 * 60 * 60 * 1000), icon: Bell },
+  { id: 3, type: 'appointment', title: 'Consultation scheduled with Dr. Sarah Jenkins', date: new Date(Date.now() - 24 * 60 * 60 * 1000), icon: CalendarDays },
+  { id: 4, type: 'vaccine', title: 'MMR Booster vaccination recorded', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), icon: Syringe },
 ];
 
 const RecentActivity = () => {
@@ -36,7 +37,7 @@ const RecentActivity = () => {
                 </div>
                 <p className="text-body font-medium text-gray-900 text-sm leading-snug">{item.title}</p>
               </div>
-              <span className="text-[11px] text-gray-400 font-medium whitespace-nowrap pl-2">{item.time}</span>
+              <span className="text-[11px] text-gray-400 font-medium whitespace-nowrap pl-2">{formatRelativeTime(item.date)}</span>
             </div>
           );
         })}

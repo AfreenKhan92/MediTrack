@@ -13,6 +13,7 @@ const normalizeReminderPayload = (body) => {
     reminderTimes,
     startDate: body.startDate,
     endDate: body.endDate,
+    purpose: body.purpose,
     notes: body.notes,
     active,
   };
@@ -94,6 +95,7 @@ export const createReminder = async (req, res, next) => {
       reminderTimes: payload.reminderTimes,
       startDate: payload.startDate ?? new Date(),
       endDate: payload.endDate,
+      purpose: payload.purpose,
       notes: payload.notes,
       active: parseBoolean(payload.active ?? true),
     });
@@ -131,6 +133,7 @@ export const updateReminder = async (req, res, next) => {
     if (payload.reminderTimes !== undefined) reminder.reminderTimes = payload.reminderTimes;
     if (payload.startDate !== undefined) reminder.startDate = payload.startDate;
     if (payload.endDate !== undefined) reminder.endDate = payload.endDate;
+    if (payload.purpose !== undefined) reminder.purpose = payload.purpose;
     if (payload.notes !== undefined) reminder.notes = payload.notes;
     if (payload.active !== undefined) reminder.active = parseBoolean(payload.active);
 

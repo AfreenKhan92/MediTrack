@@ -38,6 +38,9 @@ import Button from '../components/Button';
 import Badge from '../components/Badge';
 import Card from '../components/Card';
 import { showToast } from '../utils/toast';
+import { formatDate, formatTime, formatRelativeTime } from '../utils/dateUtils';
+import { calculateHealthStatus } from '../utils/healthStatus';
+
 
 const TAGLINE_PHRASES = [
   "Organize your family's medical records",
@@ -238,7 +241,7 @@ const Dashboard = () => {
       priorityBadge: { label: isToday ? 'Needs Attention' : 'Routine', icon: isToday ? '🟡' : '🔵', variant: isToday ? 'warning' : 'primary' },
       icon: CalendarDays,
       title: `Dr. ${a.doctorName}`,
-      subtitle: `${a.familyMember ? a.familyMember.name : 'Self'} · ${a.specialty} · ${new Date(a.appointmentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`,
+      subtitle: `${a.familyMember ? a.familyMember.name : 'Self'} · ${a.specialty} · ${formatDate(a.appointmentDate, { month: 'short', day: 'numeric' })}`,
       actionText: 'View Appointment',
       actionRoute: '/appointments'
     });
@@ -249,6 +252,7 @@ const Dashboard = () => {
   // 2. Derive Per-Member Health-Tracking Stats for Family Health Section
   const memberHealthStats = data.members.map(member => {
     const memberName = member.name.toLowerCase();
+    const healthStatus = calculateHealthStatus(member); // dynamic, not member.status
     
     const medsCount = activeReminders.filter(r => 
       (r.familyMember && r.familyMember.name && r.familyMember.name.toLowerCase() === memberName)
@@ -256,7 +260,7 @@ const Dashboard = () => {
 
     const apptsCount = data.appointments.filter(a => 
       (a.familyMember && a.familyMember.name && a.familyMember.name.toLowerCase() === memberName)
-    ).length || (member.status === 'Checkup Due' ? 1 : 0);
+    ).length || (healthStatus === 'NEEDS ATTENTION' || healthStatus === 'HIGH RISK' ? 1 : 0);
 
     const memberVaccines = data.vaccines.filter(v => 
       (v.patientName && v.patientName.toLowerCase() === memberName)
@@ -271,7 +275,7 @@ const Dashboard = () => {
     if (hasOverdueVaccine) {
       statusKey = 'action_required';
       statusBadge = { label: 'Action Required', icon: '🔴', class: 'bg-red-50 text-red-700 border-red-200' };
-    } else if (member.status === 'Checkup Due' || apptsCount > 0) {
+    } else if (healthStatus === 'HIGH RISK' || healthStatus === 'NEEDS ATTENTION' || apptsCount > 0) {
       statusKey = 'needs_attention';
       statusBadge = { label: 'Needs Attention', icon: '🟡', class: 'bg-amber-50 text-amber-700 border-amber-200' };
     }
@@ -284,7 +288,7 @@ const Dashboard = () => {
       recordsCount,
       statusKey,
       statusBadge,
-      lastUpdated: 'Active 2h ago'
+      lastUpdated: 'Active'
     };
   });
 
@@ -648,10 +652,10 @@ const Dashboard = () => {
                         </div>
                         <div className="text-right sm:self-center">
                           <p className="text-caption font-bold text-gray-900">
-                            {new Date(appt.appointmentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            {formatDate(appt.appointmentDate, { month: 'short', day: 'numeric' })}
                           </p>
                           <p className="text-[11px] text-blue-600 font-semibold">
-                            {new Date(appt.appointmentDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                            {formatTime(appt.appointmentDate)}
                           </p>
                         </div>
                       </div>
@@ -784,7 +788,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex justify-between items-center text-caption text-gray-600 pt-1 border-t border-gray-200">
                       <span>Patient: <strong className="text-gray-900">{vacc.patientName}</strong></span>
-                      <span>Due: <strong className="text-blue-600">{new Date(vacc.nextDueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</strong></span>
+                      <span>Due: <strong className="text-blue-600">{formatDate(vacc.nextDueDate, { month: 'short', day: 'numeric' })}</strong></span>
                     </div>
                   </div>
                 ))}

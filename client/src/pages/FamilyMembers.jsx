@@ -16,6 +16,11 @@ import EmptyState from '../components/EmptyState';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
+import {
+  calculateHealthStatus,
+  healthStatusVariant,
+  healthStatusLabel,
+} from '../utils/healthStatus';
 
 // Reusable Modal Component for Add / Edit
 const FamilyMemberModal = ({ isOpen, onClose, onSubmit, member, loading }) => {
@@ -267,9 +272,9 @@ const FamilyMembers = () => {
   const [selectedMember, setSelectedMember] = useState(null);
 
   const mockFamilyMembers = [
-    { _id: 'mock1', name: 'John Doe', relation: 'Self', age: 34, bloodGroup: 'O+', allergies: ['Penicillin'], notes: 'Main account holder.', status: 'Healthy' },
-    { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse', age: 32, bloodGroup: 'A+', allergies: ['Pollen'], notes: 'Migraine history.', status: 'Healthy' },
-    { _id: 'mock3', name: 'Leo Doe', relation: 'Child', age: 5, bloodGroup: 'O+', allergies: ['Peanuts', 'Dust'], notes: 'Asthma history.', status: 'Checkup Due' }
+    { _id: 'mock1', name: 'John Doe', relation: 'Self', age: 34, bloodGroup: 'O+', allergies: ['Penicillin'], notes: 'Hypertension and high cholesterol.' },
+    { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse', age: 32, bloodGroup: 'A+', allergies: ['Pollen'], notes: 'Hypothyroidism, vitamin D deficiency, iron-deficiency anemia.' },
+    { _id: 'mock3', name: 'Leo Doe', relation: 'Child', age: 5, bloodGroup: 'O+', allergies: ['Peanuts', 'Dust'], notes: 'Asthma history.' }
   ];
 
   const fetchMembers = async () => {
@@ -319,7 +324,6 @@ const FamilyMembers = () => {
           const mockNewMember = {
             _id: 'mock_' + Date.now(),
             ...formData,
-            status: 'Healthy'
           };
           setMembers([...members, mockNewMember]);
         } else {
@@ -481,16 +485,28 @@ const FamilyMembers = () => {
                   )}
                 </div>
 
-                {/* Health Status */}
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-1">
-                    <Heart size={11} className="text-blue-600" />
-                    Status
-                  </span>
-                  <Badge variant={member.status === 'Checkup Due' ? 'warning' : 'success'} className="text-[10px]">
-                    {member.status || 'Healthy'}
-                  </Badge>
-                </div>
+                {/* Health Status — dynamically calculated */}
+                {(() => {
+                  const status = calculateHealthStatus(member);
+                  const variant = healthStatusVariant(status);
+                  const label = healthStatusLabel(status);
+                  return (
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-1">
+                        <Heart size={11} className={
+                          status === 'HIGH RISK'       ? 'text-red-500' :
+                          status === 'NEEDS ATTENTION' ? 'text-amber-500' :
+                          status === 'HEALTHY'         ? 'text-emerald-500' :
+                          'text-gray-400'
+                        } />
+                        Health Status
+                      </span>
+                      <Badge variant={variant} className="text-[10px]">
+                        {label}
+                      </Badge>
+                    </div>
+                  );
+                })()}
 
                 {/* Allergies */}
                 <div className="space-y-1 pt-1 border-t border-gray-100">

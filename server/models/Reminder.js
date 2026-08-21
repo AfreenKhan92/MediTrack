@@ -37,6 +37,10 @@ const reminderSchema = new mongoose.Schema(
     endDate: {
       type: Date,
     },
+    purpose: {
+      type: String,
+      trim: true,
+    },
     notes: {
       type: String,
       trim: true,

@@ -5,6 +5,7 @@ import Card from './Card';
 import SectionHeader from './SectionHeader';
 import { SkeletonLoader } from './SkeletonLoader';
 import timelineService from '../services/timelineService';
+import { formatRelativeTime } from '../utils/dateUtils';
 
 // ─── Type icon map ────────────────────────────────────────────────────────────
 
@@ -31,21 +32,6 @@ const FALLBACK = [
   { id: 'f4', type: 'vaccination', title: 'MMR Booster vaccination recorded', date: null },
   { id: 'f5', type: 'report', title: 'Chest X-Ray uploaded', date: null },
 ];
-
-// ─── Helper: relative time ────────────────────────────────────────────────────
-
-const relativeTime = (date) => {
-  if (!date) return 'Recently';
-  const diff = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins || 1}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days} days ago`;
-  return new Date(date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
-};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -76,32 +62,32 @@ const RecentTimeline = () => {
         <SkeletonLoader type="timeline" count={5} />
       ) : (
         <div className="space-y-2.5">
-        {displayEvents.map((item) => {
-          const Icon = TYPE_ICON[item.type] || FileText;
-          const colorClass = TYPE_COLOR[item.type] || TYPE_COLOR.report;
+          {displayEvents.map((item) => {
+            const Icon = TYPE_ICON[item.type] || FileText;
+            const colorClass = TYPE_COLOR[item.type] || TYPE_COLOR.report;
 
-          return (
-            <div
-              key={item.id}
-              className="flex items-center justify-between p-3 rounded-xl bg-slate-50/70 border border-gray-100 hover:border-gray-200 transition-colors"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 ${colorClass}`}
-                >
-                  <Icon size={14} />
+            return (
+              <div
+                key={item.id}
+                className="flex items-center justify-between p-3 rounded-xl bg-slate-50/70 border border-gray-100 hover:border-gray-200 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 ${colorClass}`}
+                  >
+                    <Icon size={14} />
+                  </div>
+                  <p className="text-body font-medium text-gray-900 text-sm leading-snug truncate">
+                    {item.title}
+                  </p>
                 </div>
-                <p className="text-body font-medium text-gray-900 text-sm leading-snug truncate">
-                  {item.title}
-                </p>
+                <span className="text-[11px] text-gray-400 font-medium whitespace-nowrap pl-2 flex-shrink-0">
+                  {formatRelativeTime(item.date)}
+                </span>
               </div>
-              <span className="text-[11px] text-gray-400 font-medium whitespace-nowrap pl-2 flex-shrink-0">
-                {relativeTime(item.date)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       )}
 
       <Link

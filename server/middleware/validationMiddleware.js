@@ -239,9 +239,15 @@ export const validateVaccination = (req, res, next) => {
   }
 
   if (isCreate || resolvedDose !== undefined) {
-    const doseNumberValue = Number(resolvedDose);
-    if (resolvedDose === '' || resolvedDose === null || resolvedDose === undefined || Number.isNaN(doseNumberValue) || doseNumberValue < 1) {
-      errors.dose = 'Dose must be a valid positive number';
+    if (resolvedDose === '' || resolvedDose === null || resolvedDose === undefined) {
+      errors.dose = 'Dose is required';
+    } else {
+      const doseStr = String(resolvedDose).trim();
+      if (doseStr.length > 50) {
+        errors.dose = 'Dose description must be 50 characters or less';
+      } else if (!/^[a-zA-Z0-9\s\-–—.#()]+$/.test(doseStr)) {
+        errors.dose = 'Please enter a valid dose (e.g. 1, 2, 1-2, Booster)';
+      }
     }
   }
 

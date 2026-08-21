@@ -12,6 +12,7 @@ import {
   Calendar,
   Building
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import vaccineService from '../services/vaccineService';
 import familyService from '../services/familyService';
 import { showToast } from '../utils/toast';
@@ -20,11 +21,15 @@ import EmptyState from '../components/EmptyState';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
+import { formatDoseLabel } from '../utils/formatUtils';
 
 // Reusable Vaccine Modal Component (Add / Edit)
 const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loading }) => {
+  const PRESET_DOSES = ['1', '2', '3', '4', '5', '1-2', '2-3', 'Booster', 'Booster 1', 'Booster 2'];
+
   const [vaccineName, setVaccineName] = useState('');
-  const [doseNumber, setDoseNumber] = useState('1');
+  const [doseSelect, setDoseSelect] = useState('1');
+  const [customDose, setCustomDose] = useState('');
   const [familyMember, setFamilyMember] = useState('');
   const [status, setStatus] = useState('Administered');
   const [dateAdministered, setDateAdministered] = useState('');
@@ -36,7 +41,14 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
   useEffect(() => {
     if (vaccine) {
       setVaccineName(vaccine.vaccineName || '');
-      setDoseNumber(String(vaccine.doseNumber || 1));
+      const rawDose = String(vaccine.doseNumber ?? vaccine.dose ?? '1');
+      if (PRESET_DOSES.includes(rawDose)) {
+        setDoseSelect(rawDose);
+        setCustomDose('');
+      } else {
+        setDoseSelect('Custom');
+        setCustomDose(rawDose);
+      }
       setFamilyMember(vaccine.familyMember?._id || vaccine.familyMember || '');
       setStatus(vaccine.status || 'Administered');
       
@@ -46,7 +58,8 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
       setNotes(vaccine.notes || '');
     } else {
       setVaccineName('');
-      setDoseNumber('1');
+      setDoseSelect('1');
+      setCustomDose('');
       setFamilyMember('');
       setStatus('Administered');
       setDateAdministered(new Date().toISOString().split('T')[0]);
@@ -68,14 +81,26 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
       return;
     }
 
-    if (!doseNumber || isNaN(Number(doseNumber)) || Number(doseNumber) < 1) {
-      setValidationError('Dose number must be a valid positive number');
+    const finalDose = doseSelect === 'Custom' ? customDose.trim() : doseSelect;
+
+    if (!finalDose) {
+      setValidationError('Dose or dose range is required');
+      return;
+    }
+
+    if (finalDose.length > 50) {
+      setValidationError('Dose description must be 50 characters or less');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9\s\-–—.#()]+$/.test(finalDose)) {
+      setValidationError('Please enter a valid dose description (e.g. 1, 2, 1-2, Booster)');
       return;
     }
 
     onSubmit({
       vaccineName,
-      doseNumber: Number(doseNumber),
+      doseNumber: finalDose,
       familyMember: familyMember || null,
       status,
       dateAdministered: status === 'Administered' && dateAdministered ? new Date(dateAdministered).toISOString() : null,
@@ -120,7 +145,7 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
               <input 
                 type="text" 
                 className="form-input" 
-                placeholder="e.g. MMR, Hepatitis B"
+                placeholder="e.g. MMR, COVID-19, Hepatitis B"
                 value={vaccineName}
                 onChange={(e) => setVaccineName(e.target.value)}
                 disabled={loading}
@@ -129,17 +154,39 @@ const VaccineModal = ({ isOpen, onClose, onSubmit, vaccine, familyMembers, loadi
             </div>
 
             <div className="form-group mb-0">
-              <label className="form-label">Dose Number (e.g. 1, 2, Booster)</label>
-              <input 
-                type="number" 
-                className="form-input" 
-                placeholder="e.g. 1"
-                value={doseNumber}
-                onChange={(e) => setDoseNumber(e.target.value)}
+              <label className="form-label">Dose / Dose Range</label>
+              <select 
+                className="form-select"
+                value={doseSelect}
+                onChange={(e) => {
+                  setDoseSelect(e.target.value);
+                  if (e.target.value !== 'Custom') setCustomDose('');
+                }}
                 disabled={loading}
-                min="1"
-                required
-              />
+              >
+                <option value="1">Dose 1</option>
+                <option value="2">Dose 2</option>
+                <option value="3">Dose 3</option>
+                <option value="4">Dose 4</option>
+                <option value="5">Dose 5</option>
+                <option value="1-2">Dose 1-2</option>
+                <option value="2-3">Dose 2-3</option>
+                <option value="Booster">Booster</option>
+                <option value="Booster 1">Booster 1</option>
+                <option value="Booster 2">Booster 2</option>
+                <option value="Custom">Custom...</option>
+              </select>
+              {doseSelect === 'Custom' && (
+                <input 
+                  type="text" 
+                  className="form-input mt-2" 
+                  placeholder="e.g. Annual 2026, Booster 3"
+                  value={customDose}
+                  onChange={(e) => setCustomDose(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+              )}
             </div>
           </div>
 
@@ -269,30 +316,30 @@ const Vaccinations = () => {
   const mockVaccines = [
     {
       _id: 'mock1',
-      vaccineName: 'MMR Booster',
-      doseNumber: 2,
+      vaccineName: 'COVID-19 Booster',
+      doseNumber: 'Booster 1',
       familyMember: { _id: 'mock3', name: 'Leo Doe', relation: 'Child' },
       status: 'Administered',
       dateAdministered: '2026-06-15T00:00:00.000Z',
       nextDueDate: new Date(Date.now() + 24 * 60 * 60 * 1000 * 365).toISOString(),
       administeredBy: 'St. Jude Hospital',
-      notes: 'No adverse reactions noted.'
+      notes: 'Booster shot. No adverse reactions noted.'
     },
     {
       _id: 'mock2',
       vaccineName: 'Influenza Annual',
-      doseNumber: 1,
+      doseNumber: '1-2',
       familyMember: { _id: 'mock2', name: 'Jane Doe', relation: 'Spouse' },
       status: 'Overdue',
       dateAdministered: null,
       nextDueDate: new Date(Date.now() - 24 * 60 * 60 * 1000 * 30).toISOString(),
       administeredBy: 'Mercy Center',
-      notes: 'Annual flu shot overdue.'
+      notes: 'Annual flu shot series overdue.'
     },
     {
       _id: 'mock3',
       vaccineName: 'Tetanus Shot',
-      doseNumber: 1,
+      doseNumber: 'Booster',
       familyMember: null,
       status: 'Scheduled',
       dateAdministered: null,
@@ -547,7 +594,7 @@ const Vaccinations = () => {
                       <h4 className="text-body font-bold text-gray-900 leading-tight">
                         {vacc.vaccineName}
                       </h4>
-                      <Badge variant="secondary" className="text-[9px]">Dose #{vacc.doseNumber}</Badge>
+                      <Badge variant="secondary" className="text-[9px]">{formatDoseLabel(vacc.doseNumber ?? vacc.dose)}</Badge>
                       <Badge variant={vacc.status === 'Administered' ? 'success' : vacc.status === 'Overdue' ? 'danger' : 'warning'} className="text-[9px]">
                         {vacc.status}
                       </Badge>
@@ -562,13 +609,13 @@ const Vaccinations = () => {
                   {vacc.dateAdministered && (
                     <span className="flex items-center gap-1 text-gray-900 font-semibold">
                       <CheckCircle2 size={13} />
-                      Administered: {new Date(vacc.dateAdministered).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      Administered: {formatDate(vacc.dateAdministered)}
                     </span>
                   )}
                   {vacc.nextDueDate && (
                     <span className="flex items-center gap-1 text-gray-600">
                       <Calendar size={13} />
-                      Next Due: {new Date(vacc.nextDueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      Next Due: {formatDate(vacc.nextDueDate)}
                     </span>
                   )}
                   {vacc.administeredBy && (

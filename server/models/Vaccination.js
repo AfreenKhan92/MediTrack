@@ -18,9 +18,8 @@ const vaccinationSchema = new mongoose.Schema(
       trim: true,
     },
     dose: {
-      type: Number,
+      type: mongoose.Schema.Types.Mixed,
       required: [true, 'Dose is required'],
-      min: [1, 'Dose must be a positive number'],
     },
     dueDate: {
       type: Date,

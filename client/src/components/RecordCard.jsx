@@ -1,6 +1,8 @@
 import React from 'react';
 import { Calendar, User, FileText, Trash2, Heart } from 'lucide-react';
 
+import { formatDate } from '../utils/dateUtils';
+
 const RecordCard = ({ record, onDelete }) => {
   return (
     <div className="glass-panel p-5 flex flex-col justify-between space-y-4 animate-fade-in">
@@ -37,7 +39,7 @@ const RecordCard = ({ record, onDelete }) => {
         </div>
         <div className="flex items-center gap-1.5">
           <Calendar size={13} className="text-gray-400" />
-          <span>Date: {new Date(record.dateOfRecord).toLocaleDateString()}</span>
+          <span>Date: {formatDate(record.dateOfRecord)}</span>
         </div>
       </div>
 

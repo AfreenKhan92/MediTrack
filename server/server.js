@@ -12,6 +12,7 @@ import reminderRoutes from './routes/reminderRoutes.js';
 import vaccinationRoutes from './routes/vaccinationRoutes.js';
 import emergencyContactRoutes from './routes/emergencyContactRoutes.js';
 import timelineRoutes from './routes/timelineRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 // Load environment variables
@@ -40,6 +41,7 @@ app.use('/api/reminders', reminderRoutes);
 app.use('/api/vaccinations', vaccinationRoutes);
 app.use('/api/emergency-contacts', emergencyContactRoutes);
 app.use('/api/timeline', timelineRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Root route
 app.get('/', (req, res) => {

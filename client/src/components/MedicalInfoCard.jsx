@@ -5,20 +5,7 @@ import {
 } from 'lucide-react';
 import Badge from './Badge';
 import MedicineCard from './MedicineCard';
-
-/**
- * Formats a date string nicely.
- */
-const formatDate = (dateStr) => {
-  if (!dateStr) return null;
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr; // Return raw if not parseable
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  } catch {
-    return dateStr;
-  }
-};
+import { formatDate } from '../utils/dateUtils';
 
 /**
  * Section wrapper with consistent styling.
