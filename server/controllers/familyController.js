@@ -1,4 +1,5 @@
 import FamilyMember from '../models/FamilyMember.js';
+import { cacheGet, cacheSet, cacheDel, cacheDelMany, KEYS, TTL } from '../services/cacheService.js';
 
 // Helper: compute BMI and BMI category from height (cm) and weight (kg)
 const computeBmi = (heightCm, weightKg) => {
@@ -39,6 +40,9 @@ export const addFamilyMember = async (req, res, next) => {
       bmiCategory,
     });
 
+    // Invalidate the family list cache — a new member was added
+    await cacheDel(KEYS.familyList(req.user._id.toString()));
+
     res.status(201).json(member);
   } catch (error) {
     next(error);
@@ -50,7 +54,18 @@ export const addFamilyMember = async (req, res, next) => {
 // @access  Private
 export const getFamilyMembers = async (req, res, next) => {
   try {
+    const userId = req.user._id.toString();
+    const cacheKey = KEYS.familyList(userId);
+
+    // ── Cache-aside ───────────────────────────────────────────────────────────
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const members = await FamilyMember.find({ user: req.user._id }).sort({ relation: 1, name: 1 });
+
+    await cacheSet(cacheKey, members, TTL.FAMILY_LIST);
     res.json(members);
   } catch (error) {
     next(error);
@@ -62,6 +77,20 @@ export const getFamilyMembers = async (req, res, next) => {
 // @access  Private
 export const getFamilyMemberById = async (req, res, next) => {
   try {
+    const cacheKey = KEYS.familyMember(req.params.id);
+
+    // ── Cache-aside ───────────────────────────────────────────────────────────
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      // Ownership is already enforced when the cache was populated;
+      // re-verify to prevent cached data leaking across users if key is ever reused
+      if (cached.user?.toString() !== req.user._id.toString()) {
+        res.status(401);
+        throw new Error('Not authorized to access this family member');
+      }
+      return res.json(cached);
+    }
+
     const member = await FamilyMember.findById(req.params.id);
 
     if (!member) {
@@ -74,6 +103,7 @@ export const getFamilyMemberById = async (req, res, next) => {
       throw new Error('Not authorized to access this family member');
     }
 
+    await cacheSet(cacheKey, member, TTL.FAMILY_MEMBER);
     res.json(member);
   } catch (error) {
     next(error);
@@ -116,6 +146,14 @@ export const updateFamilyMember = async (req, res, next) => {
     member.bmiCategory = bmiCategory;
 
     const updatedMember = await member.save();
+
+    // Invalidate BOTH the individual member cache AND the family list cache
+    // so they can never temporarily disagree with each other
+    await cacheDelMany([
+      KEYS.familyMember(req.params.id),
+      KEYS.familyList(req.user._id.toString()),
+    ]);
+
     res.json(updatedMember);
   } catch (error) {
     next(error);
@@ -140,6 +178,13 @@ export const deleteFamilyMember = async (req, res, next) => {
     }
 
     await member.deleteOne();
+
+    // Invalidate BOTH the individual member cache AND the family list cache
+    await cacheDelMany([
+      KEYS.familyMember(req.params.id),
+      KEYS.familyList(req.user._id.toString()),
+    ]);
+
     res.json({ message: `Family member "${member.name}" deleted successfully` });
   } catch (error) {
     next(error);

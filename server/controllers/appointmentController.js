@@ -1,4 +1,5 @@
 import Appointment from '../models/Appointment.js';
+import { cacheDel, KEYS } from '../services/cacheService.js';
 
 // @desc    Create a new appointment
 // @route   POST /api/appointments
@@ -28,6 +29,9 @@ export const createAppointment = async (req, res, next) => {
 
     // Populate family member details in response
     await appointment.populate('familyMember', 'name relation');
+
+    // Invalidate timeline cache — new appointment appears in the timeline
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
 
     res.status(201).json(appointment);
   } catch (error) {
@@ -126,6 +130,9 @@ export const updateAppointment = async (req, res, next) => {
     const updated = await appointment.save();
     await updated.populate('familyMember', 'name relation');
 
+    // Invalidate timeline cache — appointment status or date may have changed
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
+
     res.json(updated);
   } catch (error) {
     next(error);
@@ -150,6 +157,10 @@ export const deleteAppointment = async (req, res, next) => {
     }
 
     await appointment.deleteOne();
+
+    // Invalidate timeline cache — deleted appointment must leave the timeline
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
+
     res.json({ message: 'Appointment deleted successfully' });
   } catch (error) {
     next(error);

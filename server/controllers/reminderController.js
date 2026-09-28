@@ -1,4 +1,5 @@
 import Reminder from '../models/Reminder.js';
+import { cacheDel, KEYS } from '../services/cacheService.js';
 
 const normalizeReminderPayload = (body) => {
   const reminderTimes = body.reminderTimes ?? body.times;
@@ -101,6 +102,10 @@ export const createReminder = async (req, res, next) => {
     });
 
     const createdReminder = await Reminder.findById(reminder._id).populate('patient', 'name relation');
+
+    // Invalidate timeline cache — new medicine entry appears in the timeline
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
+
     res.status(201).json(createdReminder);
   } catch (error) {
     next(error);
@@ -140,6 +145,9 @@ export const updateReminder = async (req, res, next) => {
     const updatedReminder = await reminder.save();
     await updatedReminder.populate('patient', 'name relation');
 
+    // Invalidate timeline cache — medicine entry details may have changed
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
+
     res.json(updatedReminder);
   } catch (error) {
     next(error);
@@ -164,6 +172,10 @@ export const deleteReminder = async (req, res, next) => {
     }
 
     await reminder.deleteOne();
+
+    // Invalidate timeline cache — deleted medicine entry must leave the timeline
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
+
     res.json({ message: 'Reminder deleted successfully' });
   } catch (error) {
     next(error);

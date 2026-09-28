@@ -2,6 +2,7 @@ import fs from 'fs';
 import cloudinary from '../config/cloudinary.js';
 import MedicalReport from '../models/MedicalReport.js';
 import { processReport } from '../services/reportProcessor.service.js';
+import { cacheDel, KEYS } from '../services/cacheService.js';
 
 // @desc    Upload a new medical report / prescription
 // @route   POST /api/reports
@@ -57,6 +58,9 @@ export const uploadReport = async (req, res, next) => {
         console.error(`[UploadReport] Background pipeline error for ${newReport._id}:`, err.message);
       });
     });
+
+    // Invalidate timeline cache — a new report appears in the timeline
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
 
     res.status(201).json(newReport);
   } catch (error) {
@@ -176,6 +180,9 @@ export const deleteReport = async (req, res, next) => {
 
     // Delete from MongoDB
     await report.deleteOne();
+
+    // Invalidate timeline cache — the deleted report must disappear from the timeline
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
 
     res.json({ message: 'Medical report removed successfully' });
   } catch (error) {

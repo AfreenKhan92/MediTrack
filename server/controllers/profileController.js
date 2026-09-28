@@ -1,10 +1,20 @@
 import Profile from '../models/Profile.js';
+import { cacheGet, cacheSet, cacheDel, KEYS, TTL } from '../services/cacheService.js';
 
 // @desc    Get authenticated user's profile
 // @route   GET /api/profile
 // @access  Private
 export const getProfile = async (req, res, next) => {
   try {
+    const userId = req.user._id.toString();
+    const cacheKey = KEYS.profile(userId);
+
+    // ── Cache-aside ───────────────────────────────────────────────────────────
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     // Find existing profile or create a default one
     let profile = await Profile.findOne({ userId: req.user._id });
 
@@ -12,7 +22,7 @@ export const getProfile = async (req, res, next) => {
       profile = await Profile.create({ userId: req.user._id });
     }
 
-    res.json({
+    const payload = {
       _id: profile._id,
       userId: profile.userId,
       name: req.user.name,
@@ -25,7 +35,10 @@ export const getProfile = async (req, res, next) => {
       emergencyNotes: profile.emergencyNotes,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
-    });
+    };
+
+    await cacheSet(cacheKey, payload, TTL.PROFILE);
+    res.json(payload);
   } catch (error) {
     next(error);
   }
@@ -51,6 +64,9 @@ export const updateProfile = async (req, res, next) => {
       { $set: updateData },
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
     );
+
+    // Invalidate cached profile so the next GET fetches fresh data
+    await cacheDel(KEYS.profile(req.user._id.toString()));
 
     res.json({
       _id: profile._id,

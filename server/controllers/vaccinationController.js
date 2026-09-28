@@ -1,4 +1,5 @@
 import Vaccination from '../models/Vaccination.js';
+import { cacheDel, KEYS } from '../services/cacheService.js';
 
 const normalizeVaccinationPayload = (body) => {
   const patient = body.patient ?? body.familyMember;
@@ -94,6 +95,10 @@ export const createVaccination = async (req, res, next) => {
     });
 
     const createdVaccination = await Vaccination.findById(vaccination._id).populate('patient', 'name relation');
+
+    // Invalidate timeline cache — new vaccination record appears in the timeline
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
+
     res.status(201).json(createdVaccination);
   } catch (error) {
     next(error);
@@ -133,6 +138,9 @@ export const updateVaccination = async (req, res, next) => {
     const updatedVaccination = await vaccination.save();
     await updatedVaccination.populate('patient', 'name relation');
 
+    // Invalidate timeline cache — vaccination record details may have changed
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
+
     res.json(updatedVaccination);
   } catch (error) {
     next(error);
@@ -157,6 +165,10 @@ export const deleteVaccination = async (req, res, next) => {
     }
 
     await vaccination.deleteOne();
+
+    // Invalidate timeline cache — deleted vaccination must leave the timeline
+    await cacheDel(KEYS.timeline(req.user._id.toString()));
+
     res.json({ message: 'Vaccination record deleted successfully' });
   } catch (error) {
     next(error);

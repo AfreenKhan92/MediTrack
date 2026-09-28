@@ -2,6 +2,7 @@ import MedicalReport from '../models/MedicalReport.js';
 import Appointment from '../models/Appointment.js';
 import Reminder from '../models/Reminder.js';
 import Vaccination from '../models/Vaccination.js';
+import { cacheGet, cacheSet, KEYS, TTL } from '../services/cacheService.js';
 
 // ─── Normalizers ──────────────────────────────────────────────────────────────
 
@@ -71,6 +72,13 @@ const normalizeVaccination = (v) => ({
 export const getTimeline = async (req, res, next) => {
   try {
     const userId = req.user._id;
+    const cacheKey = KEYS.timeline(userId.toString());
+
+    // ── Cache-aside: check Redis first ────────────────────────────────────────
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
 
     // Fetch all 4 collections in parallel — no new data stored
     const [reports, appointments, reminders, vaccinations] = await Promise.all([
@@ -99,6 +107,9 @@ export const getTimeline = async (req, res, next) => {
 
     // Sort by date — newest first
     events.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // ── Store in Redis (5-min TTL safety net) ─────────────────────────────────
+    await cacheSet(cacheKey, events, TTL.TIMELINE);
 
     res.json(events);
   } catch (error) {

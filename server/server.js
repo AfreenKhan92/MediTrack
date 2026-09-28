@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js';
+import { connectRedis, disconnectRedis } from './config/redis.js';
 import authRoutes from './routes/authRoutes.js';
 import recordRoutes from './routes/recordRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
@@ -18,8 +19,11 @@ import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 // Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
+// Connect to MongoDB (primary data store)
 connectDB();
+
+// Connect to Redis (caching + rate limiting layer)
+connectRedis();
 
 const app = express();
 
@@ -64,11 +68,13 @@ const gracefulShutdown = () => {
   server.close(async () => {
     console.log('HTTP server closed');
     try {
+      // Close Redis before MongoDB so in-flight cache writes can complete
+      await disconnectRedis();
       await mongoose.connection.close();
       console.log('MongoDB connection closed');
       process.exit(0);
     } catch (err) {
-      console.error('Error during MongoDB connection shutdown:', err);
+      console.error('Error during shutdown:', err);
       process.exit(1);
     }
   });
