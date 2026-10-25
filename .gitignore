@@ -35,3 +35,8 @@ lerna-debug.log*
 # Uploaded medical records / reports
 server/uploads/*
 !server/uploads/.gitkeep
+
+# Local RAG embedding environment
+.venv-rag/
+__pycache__/
+*.py[cod]
