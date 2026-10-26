@@ -14,6 +14,10 @@ const medicalChunkSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    indexVersion: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
     chunkIndex: {
       type: Number,
       required: true,
@@ -39,7 +43,7 @@ const medicalChunkSchema = new mongoose.Schema(
 );
 
 medicalChunkSchema.index(
-  { userId: 1, reportId: 1, chunkIndex: 1 },
+  { userId: 1, reportId: 1, indexVersion: 1, chunkIndex: 1 },
   { unique: true }
 );
 

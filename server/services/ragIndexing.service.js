@@ -84,26 +84,58 @@ export async function indexMedicalReport({ reportId, userId, text }) {
 
   const ownerId = new mongoose.Types.ObjectId(userId);
   const sourceReportId = new mongoose.Types.ObjectId(reportId);
+  const indexVersion = new mongoose.Types.ObjectId();
 
   const documents = chunks.map((chunk, index) => ({
     userId: ownerId,
     reportId: sourceReportId,
+    indexVersion,
     chunkIndex: index,
     text: chunk,
     embedding: vectors[index],
     embeddingModel: 'sentence-transformers/all-MiniLM-L6-v2',
   }));
 
-  // Use the confirmed collection name: medicalchunks.
-  // Replacement is scoped to this user and report.
-  await MedicalChunk.deleteMany({
-    userId: ownerId,
-    reportId: sourceReportId,
-  });
+  let inserted;
+  try {
+    inserted = await MedicalChunk.insertMany(documents, { ordered: true });
+    if (inserted.length !== documents.length) {
+      throw new Error('Inserted chunk count did not match expected count');
+    }
+  } catch (error) {
+    try {
+      await MedicalChunk.deleteMany({
+        userId: ownerId,
+        reportId: sourceReportId,
+        indexVersion,
+      });
+    } catch (cleanupError) {
+      console.warn(
+        `Failed to clean up new RAG index version (${cleanupError.name || 'UnknownError'}).`
+      );
+    }
+    throw error;
+  }
 
-  await MedicalChunk.insertMany(documents, { ordered: true });
+  let staleChunksRemain = false;
+  try {
+    await MedicalChunk.deleteMany({
+      userId: ownerId,
+      reportId: sourceReportId,
+      indexVersion: { $ne: indexVersion },
+    });
+  } catch (error) {
+    staleChunksRemain = true;
+    console.warn(
+      `Failed to remove stale RAG chunks (${error.name || 'UnknownError'}).`
+    );
+  }
 
-  return { indexedChunks: documents.length };
+  return {
+    indexedChunks: inserted.length,
+    indexVersion: indexVersion.toString(),
+    staleChunksRemain,
+  };
 }
 
 export default { indexMedicalReport };
