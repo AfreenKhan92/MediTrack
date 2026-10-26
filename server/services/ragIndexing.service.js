@@ -30,7 +30,7 @@ function splitIntoChunks(text) {
   return chunks;
 }
 
-async function generateEmbeddings(texts) {
+export async function generateEmbeddings(texts) {
   const response = await axios.post(
     `${EMBEDDING_URL}/embed`,
     { texts },
@@ -138,4 +138,4 @@ export async function indexMedicalReport({ reportId, userId, text }) {
   };
 }
 
-export default { indexMedicalReport };
+export default { indexMedicalReport, generateEmbeddings };
