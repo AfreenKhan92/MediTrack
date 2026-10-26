@@ -77,6 +77,20 @@ const medicalReportSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    ragIndexStatus: {
+      type: String,
+      enum: ['not_indexed', 'indexed', 'failed'],
+      default: 'not_indexed',
+    },
+    ragIndexedAt: {
+      type: Date,
+      default: null,
+    },
+    ragIndexError: {
+      type: String,
+      default: null,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -85,4 +99,3 @@ const medicalReportSchema = new mongoose.Schema(
 
 const MedicalReport = mongoose.model('MedicalReport', medicalReportSchema);
 export default MedicalReport;
-

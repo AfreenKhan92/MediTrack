@@ -11,8 +11,10 @@
  */
 
 import MedicalReport from '../models/MedicalReport.js';
+import mongoose from 'mongoose';
 import { extractTextFromUrl } from './ocrSpace.service.js';
 import { extractMedicalInfo, generatePatientSummary } from './openRouterService.js';
+import { indexMedicalReport } from './ragIndexing.service.js';
 
 const activeReportJobs = new Set();
 
@@ -22,10 +24,17 @@ const activeReportJobs = new Set();
 const updateStatus = async (reportId, updates) => {
   try {
     await MedicalReport.findByIdAndUpdate(reportId, updates, { new: true });
-  } catch (err) {
-    console.error(`[ReportProcessor] Failed to update status for ${reportId}:`, err.message);
+  } catch {
+    console.error(`[ReportProcessor] Failed to update status for ${reportId}: status_update_failed`);
   }
 };
+
+const saveFinalResults = async (reportId, updates) =>
+  MedicalReport.findByIdAndUpdate(reportId, updates, { new: true });
+
+const isValidOwnerId = (value) =>
+  value instanceof mongoose.Types.ObjectId ||
+  (typeof value === 'string' && /^[a-f\d]{24}$/i.test(value));
 
 /**
  * Run the full OCR → OpenRouter AI pipeline for a given report.
@@ -58,7 +67,12 @@ export const processReport = async (reportId, fileUrl, forceOcr = false) => {
 
     let ocrText = null;
 
-    if (!forceOcr && report.ocrStatus === 'success' && report.ocrText) {
+    if (
+      !forceOcr &&
+      report.ocrStatus === 'success' &&
+      typeof report.ocrText === 'string' &&
+      report.ocrText.trim()
+    ) {
       console.log(`[ReportProcessor] Using cached OCR for report ${reportId}`);
       ocrText = report.ocrText;
     } else {
@@ -66,13 +80,16 @@ export const processReport = async (reportId, fileUrl, forceOcr = false) => {
 
       try {
         ocrText = await extractTextFromUrl(fileUrl);
+        if (typeof ocrText !== 'string' || !ocrText.trim()) {
+          throw new Error('OCR returned empty text');
+        }
         await updateStatus(reportId, {
           ocrText,
           ocrStatus: 'success',
         });
         console.log(`[ReportProcessor] OCR completed for ${reportId}`);
-      } catch (ocrError) {
-        console.error(`[ReportProcessor] OCR failed for ${reportId}:`, ocrError.message);
+      } catch {
+        console.error(`[ReportProcessor] OCR failed for ${reportId}: ocr_failed`);
         await updateStatus(reportId, {
           ocrStatus: 'failed',
           processingStatus: 'failed',
@@ -90,8 +107,8 @@ export const processReport = async (reportId, fileUrl, forceOcr = false) => {
     try {
       parsedData = await extractMedicalInfo(ocrText);
       console.log(`[ReportProcessor] Medical info extracted via OpenRouter for ${reportId}`);
-    } catch (aiExtractError) {
-      console.error(`[ReportProcessor] OpenRouter extraction failed for ${reportId}:`, aiExtractError.message);
+    } catch {
+      console.error(`[ReportProcessor] OpenRouter extraction failed for ${reportId}: ai_extraction_failed`);
       await updateStatus(reportId, {
         processingStatus: 'failed',
         processedAt: new Date(),
@@ -102,25 +119,58 @@ export const processReport = async (reportId, fileUrl, forceOcr = false) => {
     try {
       summary = await generatePatientSummary(ocrText, parsedData);
       console.log(`[ReportProcessor] Summary generated via OpenRouter for ${reportId}`);
-    } catch (summaryError) {
-      console.warn(`[ReportProcessor] Summary generation failed for ${reportId}:`, summaryError.message);
+    } catch {
+      console.warn(`[ReportProcessor] Summary generation failed for ${reportId}: summary_failed`);
       summary = parsedData?.summary || null;
     }
 
     try {
-      await updateStatus(reportId, {
+      const savedReport = await saveFinalResults(reportId, {
         parsedData,
         summary,
         processingStatus: 'completed',
         processedAt: new Date(),
       });
+      if (!savedReport) {
+        console.error(`[ReportProcessor] Report ${reportId} disappeared before RAG indexing.`);
+        return;
+      }
       console.log(`[ReportProcessor] Pipeline completed successfully for ${reportId}`);
-    } catch (saveError) {
-      console.error(`[ReportProcessor] Failed to save AI results for ${reportId}:`, saveError.message);
+    } catch {
+      console.error(`[ReportProcessor] Failed to save AI results for ${reportId}: final_save_failed`);
       await updateStatus(reportId, { processingStatus: 'failed' });
+      return;
     }
-  } catch (error) {
-    console.error(`[ReportProcessor] Pipeline error for ${reportId}:`, error.message);
+
+    // ── RAG indexing (non-fatal) ───────────────────────────────────────────────
+    // Run only when OCR text is valid and the report is fully persisted.
+    // Any embedding-service or vector-storage error must never fail the upload.
+    try {
+      const ownerId = report.user;
+      if (!isValidOwnerId(ownerId)) {
+        console.warn(`[ReportProcessor] RAG indexing skipped for ${reportId}: invalid_owner`);
+        await updateStatus(reportId, {
+          ragIndexStatus: 'failed',
+          ragIndexError: 'invalid_owner',
+        });
+        return;
+      }
+      await indexMedicalReport({ reportId, userId: ownerId, text: ocrText });
+      console.log('[ReportProcessor] RAG indexing completed.');
+      await updateStatus(reportId, {
+        ragIndexStatus: 'indexed',
+        ragIndexedAt: new Date(),
+        ragIndexError: null,
+      });
+    } catch {
+      console.warn(`[ReportProcessor] RAG indexing did not complete for ${reportId}: indexing_failed`);
+      await updateStatus(reportId, {
+        ragIndexStatus: 'failed',
+        ragIndexError: 'indexing_failed',
+      });
+    }
+  } catch {
+    console.error(`[ReportProcessor] Pipeline error for ${reportId}: pipeline_failed`);
     await updateStatus(reportId, { processingStatus: 'failed' });
   } finally {
     activeReportJobs.delete(reportId);
