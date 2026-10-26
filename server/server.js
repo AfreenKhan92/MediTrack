@@ -14,6 +14,7 @@ import vaccinationRoutes from './routes/vaccinationRoutes.js';
 import emergencyContactRoutes from './routes/emergencyContactRoutes.js';
 import timelineRoutes from './routes/timelineRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
+import ragRoutes from './routes/ragRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 // Load environment variables
@@ -46,6 +47,7 @@ app.use('/api/vaccinations', vaccinationRoutes);
 app.use('/api/emergency-contacts', emergencyContactRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/rag', ragRoutes);
 
 // Root route
 app.get('/', (req, res) => {
