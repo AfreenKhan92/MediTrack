@@ -24,6 +24,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import ReportPreview from '../components/ReportPreview';
+import RagAssistantCard from '../components/RagAssistantCard';
 
 // ── Upload Progress Banner ──────────────────────────────────────────────────
 const UPLOAD_STAGES = [
@@ -434,6 +435,9 @@ const Reports = () => {
           Securely store, organize, and AI-analyze your family clinical records
         </p>
       </div>
+
+      {/* AI Health Record Assistant Card */}
+      <RagAssistantCard reports={reports} />
 
       {/* Offline Alert */}
       {error && (
