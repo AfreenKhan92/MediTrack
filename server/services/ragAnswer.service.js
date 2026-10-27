@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 
 const FALLBACK_ANSWER = "I couldn't find information about that in your uploaded reports.";
 const DEFAULT_TOP_K = 6;
-const MAX_TOKENS = 500;
+const MAX_TOKENS = 2000;
 
 const getTopK = () => {
   const parsed = Number.parseInt(process.env.RAG_TOP_K || '', 10);

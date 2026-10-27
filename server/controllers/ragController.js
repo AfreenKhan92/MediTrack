@@ -125,7 +125,21 @@ export const askRagQuestion = async (req, res) => {
       reports: [...reportsById.values()],
     });
     return res.status(200).json(result);
-  } catch {
+  // } catch {
+  //   return res.status(502).json({ message: 'Answer service unavailable' });
+  }catch (err) {
+    console.error('[RAG answer] failed:', {
+      name: err?.name,
+      status: err?.status,
+      code: err?.code,
+      type: err?.type,
+      message: typeof err?.message === 'string' ? err.message.slice(0, 200) : undefined,
+      provider: err?.error?.metadata?.provider_name,
+      raw:
+        typeof err?.error?.metadata?.raw === 'string'
+          ? err.error.metadata.raw.slice(0, 200)
+          : undefined,
+    });
     return res.status(502).json({ message: 'Answer service unavailable' });
   }
 };
